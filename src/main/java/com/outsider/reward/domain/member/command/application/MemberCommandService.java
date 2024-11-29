@@ -1,5 +1,7 @@
 package com.outsider.reward.domain.member.command.application;
 
+import com.outsider.reward.common.exception.BusinessException;
+import com.outsider.reward.common.exception.ErrorCode;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
@@ -18,11 +20,11 @@ public class MemberCommandService {
     @Transactional
     public Long signUp(MemberCommand.SignUp command) {
         if (memberRepository.existsByBasicInfo_Email(command.getEmail())) {
-            throw new RuntimeException("이미 존재하는 이메일입니다.");
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
         
         if (memberRepository.existsByBasicInfo_Nickname(command.getNickname())) {
-            throw new RuntimeException("이미 존재하는 닉네임입니다.");
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
         
         Member member = Member.builder()
@@ -38,10 +40,10 @@ public class MemberCommandService {
     @Transactional
     public MemberCommand.LoginResponse login(MemberCommand.Login command) {
         Member member = memberRepository.findByBasicInfo_Email(command.getEmail())
-            .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
+            .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
             
         if (!passwordEncoder.matches(command.getPassword(), member.getBasicInfo().getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
         
         return new MemberCommand.LoginResponse(member.getId());
