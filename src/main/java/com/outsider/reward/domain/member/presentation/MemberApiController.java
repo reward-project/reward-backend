@@ -36,4 +36,19 @@ public class MemberApiController {
         MemberQuery.MemberInfo memberInfo = memberQueryService.getMemberInfo(id);
         return ResponseEntity.ok(ApiResponse.success(memberInfo));
     }
+    
+    @PostMapping("/verify/send")
+    public ResponseEntity<ApiResponse<Void>> sendVerificationEmail(@RequestParam String email) {
+        emailService.sendVerificationEmail(email);
+        return ResponseEntity.ok(ApiResponse.success(null, "인증 코드가 발송되었습니다."));
+    }
+    
+    @PostMapping("/verify/check")
+    public ResponseEntity<ApiResponse<Boolean>> verifyEmail(
+            @RequestParam String email,
+            @RequestParam String code) {
+        boolean isVerified = emailService.verifyEmail(email, code);
+        return ResponseEntity.ok(ApiResponse.success(isVerified,
+                isVerified ? "인증이 완료되었습니다." : "인증에 실패했습니다."));
+    }
 } 
