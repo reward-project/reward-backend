@@ -51,4 +51,32 @@ public class MemberApiController {
         return ResponseEntity.ok(ApiResponse.success(isVerified,
                 isVerified ? "인증이 완료되었습니다." : "인증에 실패했습니다."));
     }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<TokenDto>> refresh(@RequestParam String refreshToken) {
+        TokenDto tokenDto = memberCommandService.refresh(refreshToken);
+        return ResponseEntity.ok(ApiResponse.success(tokenDto));
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        memberCommandService.logout(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(null, "로그아웃되었습니다."));
+    }
+    
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<ApiResponse<Void>> updateProfile(
+            @PathVariable Long id,
+            @Valid @RequestBody MemberCommand.UpdateProfile command) {
+        memberCommandService.updateProfile(id, command);
+        return ResponseEntity.ok(ApiResponse.success(null, "프로필이 수정되었습니다."));
+    }
+    
+    @PostMapping("/{id}/profile-image")
+    public ResponseEntity<ApiResponse<String>> updateProfileImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String imageUrl = memberCommandService.updateProfileImage(id, file);
+        return ResponseEntity.ok(ApiResponse.success(imageUrl, "프로필 이미지가 업로드되었습니다."));
+    }
 } 

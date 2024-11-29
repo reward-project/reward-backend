@@ -45,4 +45,16 @@ public class MemberCommand {
             this.token = token;
         }
     }
+    
+    @Getter @Setter
+    public static class UpdateProfile {
+        @Size(min = 2, max = 20, message = "닉네임은 2~20자 사이여야 합니다.")
+        private String nickname;
+        
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                message = "비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다.")
+        private String newPassword;
+        
+        private String currentPassword;
+    }
 } 
