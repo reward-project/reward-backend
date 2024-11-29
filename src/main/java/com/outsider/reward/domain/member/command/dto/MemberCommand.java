@@ -38,9 +38,11 @@ public class MemberCommand {
     @Getter
     public static class LoginResponse {
         private final Long memberId;
+        private final String token;
         
-        public LoginResponse(Long memberId) {
+        public LoginResponse(Long memberId, String token) {
             this.memberId = memberId;
+            this.token = token;
         }
     }
 } 

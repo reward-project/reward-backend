@@ -5,6 +5,8 @@ import com.outsider.reward.common.exception.ErrorCode;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
+import com.outsider.reward.global.security.jwt.JwtTokenProvider;
+import com.outsider.reward.global.security.oauth.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,8 @@ public class MemberCommandService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final EmailService emailService;
     
     @Transactional
     public Long signUp(MemberCommand.SignUp command) {
@@ -45,7 +49,24 @@ public class MemberCommandService {
         if (!passwordEncoder.matches(command.getPassword(), member.getBasicInfo().getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
+
+        if (!member.isEmailVerified()) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
         
-        return new MemberCommand.LoginResponse(member.getId());
+        String token = jwtTokenProvider.createToken(member.getBasicInfo().getEmail());
+        return new MemberCommand.LoginResponse(member.getId(), token);
+    }
+
+    @Transactional
+    public void verifyEmail(String email, String code) {
+        Member member = memberRepository.findByBasicInfo_Email(email)
+            .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+            
+        if (!emailService.verifyEmail(email, code)) {
+            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_CODE);
+        }
+        
+        member.verifyEmail();
     }
 } 
