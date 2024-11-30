@@ -1,25 +1,59 @@
 package com.outsider.reward.common.exception;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.outsider.reward.common.response.ApiResponse;
+import com.outsider.reward.global.i18n.MessageUtils;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+    
+    private final MessageUtils messageUtils;
 
     @ExceptionHandler(BusinessException.class)
-    protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
-        return ErrorResponse.toResponseEntity(e.getErrorCode());
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
+        log.error("Business Exception: {}", e.getMessage());
+        String message = messageUtils.getMessage(e.getErrorCode().getMessageKey());
+        return ResponseEntity
+            .status(e.getErrorCode().getStatus())
+            .body(ApiResponse.error(null, message));
     }
 
-    @ExceptionHandler(BindException.class)
-    protected ResponseEntity<ErrorResponse> handleBindException(BindException e) {
-        return ErrorResponse.toResponseEntity(ErrorCode.INVALID_INPUT_VALUE, e.getBindingResult());
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingRequestBodyException(HttpMessageNotReadableException e) {
+        log.error("Request Body Error: {}", e.getMessage());
+        log.debug("Exception details:", e);
+        return ResponseEntity
+            .badRequest()
+            .body(ApiResponse.error(null, messageUtils.getMessage("error.missing.required.field")));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException e) {
+        log.error("Validation Exception: {}", e.getMessage());
+        String message = e.getBindingResult().getFieldErrors().stream()
+            .findFirst()
+            .map(error -> error.getDefaultMessage())
+            .orElse(messageUtils.getMessage("error.invalid.input"));
+        return ResponseEntity
+            .badRequest()
+            .body(ApiResponse.error(null, message));
     }
 
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
-        return ErrorResponse.toResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
+        log.error("Unexpected Exception", e);
+        return ResponseEntity
+            .internalServerError()
+            .body(ApiResponse.error(null, messageUtils.getMessage("error.server")));
     }
-} 
+}

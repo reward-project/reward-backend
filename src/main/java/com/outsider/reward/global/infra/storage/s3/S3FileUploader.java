@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.outsider.reward.global.infra.storage.FileUploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "cloud.aws", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class S3FileUploader implements FileUploader {
 
     private final AmazonS3Client amazonS3Client;
@@ -23,19 +25,21 @@ public class S3FileUploader implements FileUploader {
     
     @Override
     public String upload(MultipartFile file, String dirPath) throws IOException {
-        String fileName = dirPath + "/" + createFileName(file.getOriginalFilename());
+        String fileName = createFileName(file.getOriginalFilename());
+        String fileKey = dirPath + "/" + fileName;
+        
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(file.getContentType());
         metadata.setContentLength(file.getSize());
         
-        amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), metadata));
-        return amazonS3Client.getUrl(bucket, fileName).toString();
+        amazonS3Client.putObject(new PutObjectRequest(bucket, fileKey, file.getInputStream(), metadata));
+        return amazonS3Client.getUrl(bucket, fileKey).toString();
     }
 
     @Override
-    public void delete(String fileUrl) throws IOException {
-        String objectKey = extractObjectKeyFromUrl(fileUrl);
-        amazonS3Client.deleteObject(bucket, objectKey);
+    public void delete(String fileUrl) {
+        String fileKey = fileUrl.substring(fileUrl.indexOf(bucket) + bucket.length() + 1);
+        amazonS3Client.deleteObject(bucket, fileKey);
     }
     
     private String createFileName(String originalFileName) {
@@ -44,9 +48,5 @@ public class S3FileUploader implements FileUploader {
     
     private String getFileExtension(String fileName) {
         return fileName.substring(fileName.lastIndexOf("."));
-    }
-
-    private String extractObjectKeyFromUrl(String fileUrl) {
-        return fileUrl.substring(fileUrl.indexOf(bucket) + bucket.length() + 1);
     }
 } 
