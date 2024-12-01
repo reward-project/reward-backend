@@ -67,7 +67,7 @@ public class MemberCommandService {
     }
 
     @Transactional
-    public MemberCommand.LoginResponse login(MemberCommand.Login command) {
+    public TokenDto login(MemberCommand.Login command) {
         Member member = memberRepository.findByBasicInfo_Email(command.getEmail())
             .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
             
@@ -79,8 +79,10 @@ public class MemberCommandService {
             throw new MemberException(MemberErrorCode.EMAIL_NOT_VERIFIED);
         }
         
-        String token = jwtTokenProvider.createToken(member.getEmail());
-        return new MemberCommand.LoginResponse(member.getId(), token);
+        String accessToken = jwtTokenProvider.createToken(member.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+        
+        return new TokenDto(accessToken, refreshToken);
     }
 
     @Transactional

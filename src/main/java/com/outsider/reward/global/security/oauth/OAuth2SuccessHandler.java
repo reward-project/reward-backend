@@ -69,7 +69,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .domain(appConfig.getCookie().getDomain())
                 .secure(appConfig.getCookie().isSecure())
                 .sameSite(appConfig.getCookie().getSameSite())
-                .httpOnly(true)
+                .httpOnly(false)
                 .maxAge(Duration.ofHours(1))
                 .build();
 
@@ -78,7 +78,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .domain(appConfig.getCookie().getDomain())
                 .secure(appConfig.getCookie().isSecure())
                 .sameSite(appConfig.getCookie().getSameSite())
-                .httpOnly(true)
+                .httpOnly(false)
                 .maxAge(Duration.ofDays(14))
                 .build();
 

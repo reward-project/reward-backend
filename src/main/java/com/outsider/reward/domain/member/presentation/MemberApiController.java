@@ -19,21 +19,16 @@ import com.outsider.reward.global.i18n.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Locale;
 
 @Slf4j
@@ -66,14 +61,11 @@ public class MemberApiController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<MemberCommand.LoginResponse>> login(
-            @RequestBody @Valid MemberCommand.Login command
-           ) {
-
-        MemberCommand.LoginResponse response = memberCommandService.login(command);
-        String message = messageUtils.getMessage("success.login");
-        
-        return ResponseEntity.ok(ApiResponse.success(response, message));
+    public ResponseEntity<ApiResponse<TokenDto>> login(
+            @RequestBody @Valid MemberCommand.Login command) {
+        TokenDto tokenDto = memberCommandService.login(command);
+        return ResponseEntity.ok(ApiResponse.success(tokenDto, 
+            messageUtils.getMessage("success.login")));
     }
     
     @GetMapping("/{id}")
@@ -113,35 +105,13 @@ public class MemberApiController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestHeader(value = "Authorization-Refresh", required = false) String refreshToken,
-            @CookieValue(value = "refreshToken", required = false) String refreshTokenCookie,
-            HttpServletResponse response) {
+            @RequestHeader(value = "Authorization-Refresh", required = false) String refreshToken) {
         
-        String tokenToDelete = null;
-        String email = userDetails.getUsername();
-        
-        // 헤더나 쿠키에서 리프레시 토큰 확인
         if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
-            tokenToDelete = refreshToken.substring(7);
-        } else if (refreshTokenCookie != null) {
-            tokenToDelete = refreshTokenCookie;
-            // 쿠키 삭제
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .path("/")
-                .maxAge(0)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Lax")
-                .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        }
-
-        if (tokenToDelete != null) {
-            // 특큰 소유자 검증 후 삭제
-            memberCommandService.logout(tokenToDelete, email);
+            refreshToken = refreshToken.substring(7);
+            memberCommandService.logout(refreshToken, userDetails.getUsername());
         } else {
-            // 모든 리프레시 토큰 삭제
-            memberCommandService.logoutAll(email);
+            memberCommandService.logoutAll(userDetails.getUsername());
         }
         
         return ResponseEntity.ok(ApiResponse.success(null, 

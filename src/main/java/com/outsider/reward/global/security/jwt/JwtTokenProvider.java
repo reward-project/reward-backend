@@ -29,11 +29,7 @@ public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
     private final RefreshTokenRepository refreshTokenRepository;
-
-    @Value("${jwt.access-token-validity}")
     private final long accessTokenValidityInMilliseconds;
-    
-    @Value("${jwt.refresh-token-validity}")
     private final long refreshTokenValidityInMilliseconds;
 
     @Value("${jwt.secret}")

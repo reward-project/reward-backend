@@ -42,12 +42,12 @@ public class MemberCommand {
     
     @Getter
     public static class LoginResponse {
-        private final Long memberId;
-        private final String token;
+        private final String accessToken;
+        private final String refreshToken;
         
-        public LoginResponse(Long memberId, String token) {
-            this.memberId = memberId;
-            this.token = token;
+        public LoginResponse(String accessToken, String refreshToken) {
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
         }
     }
     
