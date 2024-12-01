@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -96,21 +97,38 @@ public class MemberCommandService {
 
     @Transactional
     public TokenDto refresh(String refreshToken) {
-        RefreshToken token = refreshTokenRepository.findById(refreshToken)
+        RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
                 
         String newAccessToken = jwtTokenProvider.createToken(token.getEmail());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(token.getEmail());
         
-        refreshTokenRepository.delete(token);
+        // 기존 토큰 삭제 후 새 토큰 저장
+        refreshTokenRepository.deleteById(token.getRefreshToken());
         refreshTokenRepository.save(new RefreshToken(newRefreshToken, token.getEmail()));
         
         return new TokenDto(newAccessToken, newRefreshToken);
     }
     
     @Transactional
-    public void logout(String email) {
-        refreshTokenRepository.deleteByEmail(email);
+    public void logout(String refreshToken, String email) {
+        // 리프레시 토큰 검증
+        RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
+        
+        // 토큰의 소유자 검증
+        if (!token.getEmail().equals(email)) {
+            throw new MemberException(MemberErrorCode.UNAUTHORIZED_TOKEN);
+        }
+
+        // 검증된 토큰만 삭제
+        refreshTokenRepository.deleteById(token.getRefreshToken());
+    }
+
+    @Transactional
+    public void logoutAll(String email) {
+        List<RefreshToken> tokens = refreshTokenRepository.findAllByEmail(email);
+        refreshTokenRepository.deleteAll(tokens);
     }
     
     @Transactional

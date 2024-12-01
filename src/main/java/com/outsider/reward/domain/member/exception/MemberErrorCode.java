@@ -16,6 +16,7 @@ public enum MemberErrorCode implements ErrorCode {
     INVALID_VERIFICATION_CODE(400, "error.invalid.verification.code"),
     MEMBER_ALREADY_EXISTS(400, "error.member.already.exists"),
     INVALID_REFRESH_TOKEN(400, "error.invalid.refresh.token"),
+    UNAUTHORIZED_TOKEN(401, "error.unauthorized.token"),
     INVALID_GOOGLE_TOKEN(400, "error.invalid.google.token"),
     GOOGLE_AUTH_FAILED(400, "error.google.auth.failed");
 

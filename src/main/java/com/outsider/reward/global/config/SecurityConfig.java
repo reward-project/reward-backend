@@ -56,10 +56,10 @@ public class SecurityConfig {
             .sessionManagement(sessionManagement -> 
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
-                // .requestMatchers(permittedEndpoints()).permitAll()
-                .requestMatchers("/**").permitAll()
-                // .requestMatchers("/**").access(getOrFullAuthorizationManager)
-                // .anyRequest().authenticated()
+                .requestMatchers(permittedEndpoints()).permitAll()
+                // .requestMatchers("/**").permitAll()
+                .requestMatchers("/**").access(getOrFullAuthorizationManager)
+                .anyRequest().authenticated()
             )
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)

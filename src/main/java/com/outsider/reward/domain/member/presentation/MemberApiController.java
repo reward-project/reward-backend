@@ -5,12 +5,14 @@ import com.outsider.reward.domain.member.command.application.MemberCommandServic
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
 import com.outsider.reward.domain.member.command.dto.TokenDto;
+import com.outsider.reward.domain.member.command.dto.TokenRefreshRequest;
 import com.outsider.reward.domain.member.mapper.MemberMapper;
 import com.outsider.reward.domain.member.command.dto.GoogleCallbackRequest;
 import com.outsider.reward.domain.member.query.application.MemberQueryService;
 import com.outsider.reward.domain.member.query.dto.MemberQuery;
 import com.outsider.reward.domain.member.query.dto.MemberResponse;
 import com.outsider.reward.global.security.CustomUserDetails;
+import com.outsider.reward.global.security.jwt.JwtTokenProvider;
 import com.outsider.reward.global.common.exception.BusinessException;
 import com.outsider.reward.global.common.response.ApiResponse;
 import com.outsider.reward.global.i18n.MessageUtils;
@@ -18,10 +20,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +48,7 @@ public class MemberApiController {
     private final EmailService emailService;
     private final MessageUtils messageUtils;
     private final MemberMapper memberMapper;
-    
+    private final JwtTokenProvider jwtTokenProvider;
     @Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공"),
@@ -100,15 +105,56 @@ public class MemberApiController {
     }
     
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenDto>> refresh(@RequestParam String refreshToken) {
-        TokenDto tokenDto = memberCommandService.refresh(refreshToken);
+    public ResponseEntity<ApiResponse<TokenDto>> refreshToken(@RequestBody TokenRefreshRequest request) {
+        TokenDto tokenDto = jwtTokenProvider.refreshAccessToken(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(tokenDto));
     }
     
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        memberCommandService.logout(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(null, messageUtils.getMessage("success.logout")));
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "Authorization-Refresh", required = false) String refreshToken,
+            @CookieValue(value = "refreshToken", required = false) String refreshTokenCookie,
+            HttpServletResponse response) {
+        
+        String tokenToDelete = null;
+        String email = userDetails.getUsername();
+        
+        // 헤더나 쿠키에서 리프레시 토큰 확인
+        if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
+            tokenToDelete = refreshToken.substring(7);
+        } else if (refreshTokenCookie != null) {
+            tokenToDelete = refreshTokenCookie;
+            // 쿠키 삭제
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        }
+
+        if (tokenToDelete != null) {
+            // 특큰 소유자 검증 후 삭제
+            memberCommandService.logout(tokenToDelete, email);
+        } else {
+            // 모든 리프레시 토큰 삭제
+            memberCommandService.logoutAll(email);
+        }
+        
+        return ResponseEntity.ok(ApiResponse.success(null, 
+            messageUtils.getMessage("success.logout")));
+    }
+    
+    @PostMapping("/logout-all")
+    public ResponseEntity<ApiResponse<Void>> logoutAll(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 모든 기기에서 로그아웃
+        memberCommandService.logoutAll(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(null, 
+            messageUtils.getMessage("success.logout.all")));
     }
     
     @PutMapping("/{id}/profile")
