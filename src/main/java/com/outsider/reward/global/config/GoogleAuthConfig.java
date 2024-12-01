@@ -17,18 +17,17 @@ import java.util.Collections;
 @RequiredArgsConstructor
 @Slf4j
 public class GoogleAuthConfig {
-
-    @Value("${google.android.client-id}")
-    private String androidClientId;
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String clientId;
 
     @Bean
     public GoogleIdTokenVerifier googleIdTokenVerifier() {
-        log.debug("Creating GoogleIdTokenVerifier with client ID: {}", androidClientId);
+        log.debug("Creating GoogleIdTokenVerifier with client ID: {}", clientId);
         
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
             new NetHttpTransport(), 
             GsonFactory.getDefaultInstance())
-            .setAudience(Collections.singletonList(androidClientId))
+            .setAudience(Collections.singletonList(clientId))
             .setIssuer("https://accounts.google.com")
             .build();
             
