@@ -30,16 +30,14 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         
         long startTime = System.currentTimeMillis();
         
-        // 요청 로깅
-        logRequest(requestWrapper);
+        // 먼저 필터 체인을 실행
+        filterChain.doFilter(requestWrapper, responseWrapper);
         
-        try {
-            filterChain.doFilter(requestWrapper, responseWrapper);
-        } finally {
-            // 응답 로깅
-            logResponse(responseWrapper, System.currentTimeMillis() - startTime);
-            responseWrapper.copyBodyToResponse();
-        }
+        // 그 후에 로깅 (이때는 캐시된 내용을 읽음)
+        logRequest(requestWrapper);
+        logResponse(responseWrapper, System.currentTimeMillis() - startTime);
+        
+        responseWrapper.copyBodyToResponse();
     }
     
     private void logRequest(ContentCachingRequestWrapper request) throws IOException {
@@ -66,7 +64,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         
         // 요청 본문 로깅 (JSON인 경우에만)
         if (isJsonContent(request.getContentType())) {
-            String requestBody = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
+            String requestBody = new String(request.getContentAsByteArray(), StandardCharsets.UTF_8);
             if (!requestBody.isEmpty()) {
                 logMessage.append("\n>>> Body: ").append(requestBody);
             }

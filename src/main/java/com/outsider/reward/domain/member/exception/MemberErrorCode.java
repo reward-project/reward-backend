@@ -1,6 +1,7 @@
 package com.outsider.reward.domain.member.exception;
 
-import com.outsider.reward.common.exception.ErrorCode;
+import com.outsider.reward.global.common.exception.ErrorCode;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

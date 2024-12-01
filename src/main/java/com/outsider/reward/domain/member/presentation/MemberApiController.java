@@ -1,7 +1,5 @@
 package com.outsider.reward.domain.member.presentation;
 
-import com.outsider.reward.common.exception.BusinessException;
-import com.outsider.reward.common.response.ApiResponse;
 import com.outsider.reward.domain.member.command.application.EmailService;
 import com.outsider.reward.domain.member.command.application.MemberCommandService;
 import com.outsider.reward.domain.member.command.domain.Member;
@@ -13,6 +11,8 @@ import com.outsider.reward.domain.member.query.application.MemberQueryService;
 import com.outsider.reward.domain.member.query.dto.MemberQuery;
 import com.outsider.reward.domain.member.query.dto.MemberResponse;
 import com.outsider.reward.global.security.CustomUserDetails;
+import com.outsider.reward.global.common.exception.BusinessException;
+import com.outsider.reward.global.common.response.ApiResponse;
 import com.outsider.reward.global.i18n.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

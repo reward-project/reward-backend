@@ -1,8 +1,9 @@
-package com.outsider.reward.common.response;
+package com.outsider.reward.global.common.response;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import com.outsider.reward.common.exception.ErrorCode;
+
+import com.outsider.reward.global.common.exception.ErrorCode;
 import com.outsider.reward.global.i18n.MessageUtils;
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.outsider.reward.common.response;
+package com.outsider.reward.global.common.response;
 
 import lombok.Getter;
 

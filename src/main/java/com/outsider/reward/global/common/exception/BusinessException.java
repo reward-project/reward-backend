@@ -1,4 +1,4 @@
-package com.outsider.reward.common.exception;
+package com.outsider.reward.global.common.exception;
 
 import lombok.Getter;
 

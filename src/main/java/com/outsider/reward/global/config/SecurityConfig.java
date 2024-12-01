@@ -58,8 +58,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // .requestMatchers(permittedEndpoints()).permitAll()
                 .requestMatchers("/**").permitAll()
-                .requestMatchers("/**").access(getOrFullAuthorizationManager)
-                .anyRequest().authenticated()
+                // .requestMatchers("/**").access(getOrFullAuthorizationManager)
+                // .anyRequest().authenticated()
             )
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
