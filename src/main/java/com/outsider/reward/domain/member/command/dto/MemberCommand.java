@@ -12,31 +12,31 @@ public class MemberCommand {
     
     @Getter @Setter
     public static class SignUp {
-        @NotBlank(message = "이름은 필수입니다.")
-        @Size(min = 2, max = 20, message = "이름은 2~20자 사이여야 합니다.")
+        @NotBlank(message = "{member.name.required}")
+        @Size(min = 2, max = 20, message = "{member.name.size}")
         private String name;
 
-        @NotBlank(message = "이메일은 필수입니다.")
-        @Email(message = "올바른 이메일 형식이 아닙니다.")
+        @NotBlank(message = "{member.email.required}")
+        @Email(message = "{member.email.invalid}")
         private String email;
 
-        @NotBlank(message = "비밀번호는 필수입니다.")
+        @NotBlank(message = "{member.password.required}")
         @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
-                message = "비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다.")
+                message = "{member.password.pattern}")
         private String password;
 
-        @NotBlank(message = "닉네임은 필수입니다.")
-        @Size(min = 2, max = 20, message = "닉네임은 2~20자 사이여야 합니다.")
+        @NotBlank(message = "{member.nickname.required}")
+        @Size(min = 2, max = 20, message = "{member.nickname.size}")
         private String nickname;
     }
     
     @Getter @Setter
     @ToString
     public static class Login {
-        @NotBlank(message = "이메일을 입력해주세요.")
+        @NotBlank(message = "{member.email.login.required}")
         private String email;
         
-        @NotBlank(message = "비밀번호를 입력해주세요.")
+        @NotBlank(message = "{member.password.login.required}")
         private String password;
     }
     
@@ -53,11 +53,11 @@ public class MemberCommand {
     
     @Getter @Setter
     public static class UpdateProfile {
-        @Size(min = 2, max = 20, message = "닉네임은 2~20자 사이여야 합니다.")
+        @Size(min = 2, max = 20, message = "{member.nickname.size}")
         private String nickname;
         
         @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
-                message = "비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다.")
+                message = "{member.password.pattern}")
         private String newPassword;
         
         private String currentPassword;
