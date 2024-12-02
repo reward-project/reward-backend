@@ -18,10 +18,13 @@ public enum MemberErrorCode implements ErrorCode {
     INVALID_REFRESH_TOKEN(400, "error.invalid.refresh.token"),
     UNAUTHORIZED_TOKEN(401, "error.unauthorized.token"),
     INVALID_GOOGLE_TOKEN(400, "error.invalid.google.token"),
-    GOOGLE_AUTH_FAILED(400, "error.google.auth.failed");
+    GOOGLE_AUTH_FAILED(400, "error.google.auth.failed"),
+    DUPLICATE_ROLE(400, "error.duplicate.role");
 
     private final int status;
     private final String messageKey;
+
+ 
 
     @Override
     public String getCode() {

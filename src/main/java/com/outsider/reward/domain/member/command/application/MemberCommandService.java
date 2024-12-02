@@ -4,8 +4,10 @@ import com.outsider.reward.domain.member.exception.MemberException;
 import com.outsider.reward.domain.member.exception.MemberErrorCode;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
+import com.outsider.reward.domain.member.command.domain.OAuthProvider;
 import com.outsider.reward.domain.member.command.domain.RefreshToken;
 import com.outsider.reward.domain.member.command.domain.RefreshTokenRepository;
+import com.outsider.reward.domain.member.command.domain.RoleType;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
 import com.outsider.reward.domain.member.command.dto.TokenDto;
 import com.outsider.reward.global.security.jwt.JwtTokenProvider;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -41,29 +44,27 @@ public class MemberCommandService {
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
     
     @Transactional
-    public Long signUp(MemberCommand.SignUp command) {
-        if (memberRepository.existsByBasicInfo_Email(command.getEmail())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
-        }
+    public Long signUp(MemberCommand.SignUp command, RoleType roleType) {
+        // 이메일로 기존 회원 조회
+        Optional<Member> existingMember = memberRepository.findByBasicInfo_Email(command.getEmail());
         
-        if (memberRepository.existsByBasicInfo_Nickname(command.getNickname())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
-        }
-        
-        String verificationCode = redisTemplate.opsForValue().get("EMAIL_VERIFY:" + command.getEmail());
-        if (verificationCode == null) {
-            throw new MemberException(MemberErrorCode.EMAIL_NOT_VERIFIED);
-        }
-        
-        Member member = Member.builder()
-            .name(command.getName())
-            .email(command.getEmail())
-            .password(passwordEncoder.encode(command.getPassword()))
-            .nickname(command.getNickname())
-            .build();
+        if (existingMember.isPresent()) {
+            Member member = existingMember.get();
             
-        member.setEmailVerified(true);
-        return memberRepository.save(member).getId();
+            // 이미 해당 역할을 가지고 있는 경우
+            if (member.hasRole(roleType)) {
+                throw new MemberException(MemberErrorCode.DUPLICATE_ROLE);
+            }
+            
+            // 새로운 역할 추가
+            member.addRole(roleType);
+            // 변경사항 저장
+            memberRepository.save(member);
+            return member.getId();
+        }
+        
+        // 새 회원 생성
+        return createNewMember(command, roleType);
     }
 
     @Transactional
@@ -166,6 +167,28 @@ public class MemberCommandService {
     }
 
     @Transactional
+    public Member createOAuthMember(String email, String name, String provider, String providerId, RoleType roleType) {
+        Member member = Member.createMember(
+            email,
+            name,
+            name,  // nickname
+            ""     // password
+        );
+        
+        OAuthProvider oAuthProvider = OAuthProvider.builder()
+            .member(member)
+            .provider(provider)
+            .providerId(providerId)
+            .build();
+        
+        member.addOAuthProvider(oAuthProvider);
+        member.verifyEmail();
+        member.addRole(roleType);
+        
+        return memberRepository.save(member);
+    }
+
+    @Transactional
     public TokenDto handleGoogleCallback(String idToken) {
         log.debug("Starting Google callback handling with token length: {}", idToken.length());
         try {
@@ -195,11 +218,14 @@ public class MemberCommandService {
             }
 
             // 회원 조회 또는 생성
-            Member member = memberRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    log.debug("Creating new member for email: {}", email);
-                    return createGoogleMember(email, name);
-                });
+            Member member = memberRepository.findByBasicInfo_Email(email)
+                .orElseGet(() -> createOAuthMember(
+                    email, 
+                    name, 
+                    "google", 
+                    payload.getSubject(),
+                    RoleType.ROLE_USER  // 기본 역할
+                ));
 
             // 토큰 생성
             String accessToken = jwtTokenProvider.createToken(email);
@@ -207,29 +233,50 @@ public class MemberCommandService {
 
             log.debug("Successfully processed Google login for: {}", email);
             return new TokenDto(accessToken, refreshToken);
-        } catch (GeneralSecurityException e) {
-            log.error("Security error during token verification", e);
-            throw new MemberException(MemberErrorCode.INVALID_GOOGLE_TOKEN);
-        } catch (IOException e) {
-            log.error("IO error during token verification", e);
-            throw new MemberException(MemberErrorCode.INVALID_GOOGLE_TOKEN);
         } catch (Exception e) {
             log.error("Unexpected error during Google auth", e);
             throw new MemberException(MemberErrorCode.GOOGLE_AUTH_FAILED);
         }
     }
 
-    private Member createGoogleMember(String email, String name) {
-        Member member = Member.builder()
-            .email(email)
-            .name(name)
-            .nickname(name)
-            .password("")
-            .build();
+    @Transactional
+    public Long signUpUser(MemberCommand.SignUp command) {
+        return signUp(command, RoleType.ROLE_USER);
+    }
+
+    @Transactional
+    public Long signUpBusiness(MemberCommand.SignUp command) {
+        return signUp(command, RoleType.ROLE_BUSINESS);
+    }
+
+    @Transactional
+    public Long signUpAdmin(MemberCommand.SignUp command) {
+        return signUp(command, RoleType.ROLE_ADMIN);
+    }
+
+    private Long createNewMember(MemberCommand.SignUp command, RoleType roleType) {
+        // 닉네임 중복 체크
+        if (memberRepository.existsByBasicInfo_Nickname(command.getNickname())) {
+            throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
+        }
         
-        member.setOAuthInfo("google", email);
+        // 이메일 인증 확인
+        String verificationCode = redisTemplate.opsForValue().get("EMAIL_VERIFY:" + command.getEmail());
+        if (verificationCode == null) {
+            throw new MemberException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
+        
+        // 새 회원 생성
+        Member member = Member.createMember(
+            command.getEmail(),
+            command.getName(),
+            command.getNickname(),
+            passwordEncoder.encode(command.getPassword())
+        );
+        
+        member.addRole(roleType);
         member.setEmailVerified(true);
         
-        return memberRepository.save(member);
+        return memberRepository.save(member).getId();
     }
 } 

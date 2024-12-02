@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,22 +45,27 @@ public class MemberApiController {
     private final MessageUtils messageUtils;
     private final MemberMapper memberMapper;
     private final JwtTokenProvider jwtTokenProvider;
-    @Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "중복된 이메일 또는 닉네임")
-    })
-    @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Long>> signUp(@Valid @RequestBody MemberCommand.SignUp command) {
-        Locale currentLocale = LocaleContextHolder.getLocale();
-        log.info("Current Locale: {}", currentLocale);
-        log.info("Accept-Language Header: {}", LocaleContextHolder.getLocaleContext());
-        
-        Long memberId = memberCommandService.signUp(command);
+    @Operation(summary = "일반 사용자 회원가입", description = "앱 사용자용 회원가입을 처리합니다.")
+    @PostMapping("/signup/user")
+    public ResponseEntity<ApiResponse<Long>> signUpUser(@Valid @RequestBody MemberCommand.SignUp command) {
+        Long memberId = memberCommandService.signUpUser(command);
         return ResponseEntity.ok(ApiResponse.success(memberId, messageUtils.getMessage("success.signup")));
     }
-    
+
+    @Operation(summary = "비즈니스 회원가입", description = "비즈니스 관계자용 회원가입을 처리합니다.")
+    @PostMapping("/signup/business")
+    public ResponseEntity<ApiResponse<Long>> signUpBusiness(@Valid @RequestBody MemberCommand.SignUp command) {
+        Long memberId = memberCommandService.signUpBusiness(command);
+        return ResponseEntity.ok(ApiResponse.success(memberId, messageUtils.getMessage("success.signup")));
+    }
+
+    @Operation(summary = "관리자 회원가입", description = "관리자용 회원가입을 처리합니다.")
+    @PostMapping("/signup/admin")
+    public ResponseEntity<ApiResponse<Long>> signUpAdmin(@Valid @RequestBody MemberCommand.SignUp command) {
+        Long memberId = memberCommandService.signUpAdmin(command);
+        return ResponseEntity.ok(ApiResponse.success(memberId, messageUtils.getMessage("success.signup")));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenDto>> login(
             @RequestBody @Valid MemberCommand.Login command) {

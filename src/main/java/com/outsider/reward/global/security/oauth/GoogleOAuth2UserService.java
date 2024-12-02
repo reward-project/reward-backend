@@ -3,6 +3,7 @@ package com.outsider.reward.global.security.oauth;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.command.domain.OAuthProvider;
+import com.outsider.reward.domain.member.command.domain.RoleType;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -23,31 +24,54 @@ public class GoogleOAuth2UserService extends DefaultOAuth2UserService {
         
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
-        String sub = oauth2User.getAttribute("sub");  // Google의 고유 식별자
+        String sub = oauth2User.getAttribute("sub");
+        
+        String platform = userRequest.getAdditionalParameters().get("platform").toString();
+        String role = userRequest.getAdditionalParameters().get("role").toString();
+        RoleType roleType = determineRoleType(role);
         
         Member member = memberRepository.findByBasicInfo_Email(email)
-                .orElseGet(() -> createMember(email, name, sub));
+                .orElseGet(() -> createOAuthMember(
+                    email,
+                    name,
+                    "google",
+                    sub,
+                    roleType
+                ));
                 
         return new CustomOAuth2User(member, oauth2User.getAttributes());
     }
 
-    private Member createMember(String email, String name, String sub) {
+    private Member createOAuthMember(String email, String name, String provider, String providerId, RoleType roleType) {
         Member member = Member.createMember(
             email,
             name,
             name,  // nickname
-            ""     // password
+            ""     // password (OAuth 사용자는 빈 비밀번호 사용)
         );
         
         OAuthProvider oAuthProvider = OAuthProvider.builder()
             .member(member)
-            .provider("google")
-            .providerId(sub)
+            .provider(provider)
+            .providerId(providerId)
             .build();
         
         member.addOAuthProvider(oAuthProvider);
         member.verifyEmail();
+        member.addRole(roleType);
         
         return memberRepository.save(member);
+    }
+
+    private RoleType determineRoleType(String role) {
+        switch (role) {
+            case "business":
+                return RoleType.ROLE_BUSINESS;
+            case "admin":
+                return RoleType.ROLE_ADMIN;
+            case "user":
+            default:
+                return RoleType.ROLE_USER;
+        }
     }
 } 

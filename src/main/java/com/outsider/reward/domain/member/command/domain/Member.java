@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "members")
@@ -26,12 +28,22 @@ public class Member {
     private boolean emailVerified;
     private LocalDateTime createdAt;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "member_roles",
+        joinColumns = @JoinColumn(name = "member_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
     public static Member createMember(String email, String name, String nickname, String password) {
         Member member = new Member();
         member.basicInfo = new MemberBasicInfo(email, name, nickname, password);
         member.emailVerified = false;
         member.createdAt = LocalDateTime.now();
         member.oAuthProviders = new ArrayList<>();
+        member.roles = new HashSet<>();
+        member.addRole(RoleType.ROLE_USER);
         return member;
     }
 
@@ -92,5 +104,24 @@ public class Member {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void addRole(RoleType roleType) {
+        this.roles.add(new Role(roleType));
+    }
+
+    public void removeRole(RoleType roleType) {
+        this.roles.removeIf(role -> role.getRoleType() == roleType);
+    }
+
+    public boolean hasRole(RoleType roleType) {
+        return this.roles.stream()
+            .anyMatch(role -> role.getRoleType() == roleType);
+    }
+
+    public Set<String> getRoleNames() {
+        return this.roles.stream()
+            .map(Role::getRoleName)
+            .collect(Collectors.toSet());
     }
 } 
