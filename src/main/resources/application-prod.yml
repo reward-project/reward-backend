@@ -15,7 +15,7 @@ spring:
       client:
         registration:
           google:
-            redirect-uri: https://${BACKEND_DOMAIN}/login/oauth2/code/google
+            redirect-uri: https://${BACKEND_DOMAIN}:${BACKEND_PORT}/login/oauth2/code/google
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
