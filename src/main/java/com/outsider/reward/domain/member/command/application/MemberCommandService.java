@@ -189,8 +189,9 @@ public class MemberCommandService {
     }
 
     @Transactional
-    public TokenDto handleGoogleCallback(String idToken) {
-        log.debug("Starting Google callback handling with token length: {}", idToken.length());
+    public TokenDto handleGoogleCallback(String idToken, String role) {
+        log.debug("Starting Google callback handling with token length: {}, role: {}", 
+            idToken.length(), role);
         try {
             // 토큰 검증
             log.debug("Attempting to verify Google ID token...");
@@ -206,16 +207,21 @@ public class MemberCommandService {
             String email = payload.getEmail();
             String name = (String) payload.get("name");
             
-            log.debug("Token payload - Email: {}, Name: {}, Subject: {}, Issuer: {}", 
-                email, name, payload.getSubject(), payload.getIssuer());
-            log.debug("Token audience: {}", payload.getAudience());
-            log.debug("Expected audience: {}", googleIdTokenVerifier.getAudience());
+            log.debug("Token payload - Email: {}, Name: {}, Subject: {}, Role: {}", 
+                email, name, payload.getSubject(), role);
 
             // 이메일 검증
             if (!Boolean.TRUE.equals(payload.getEmailVerified())) {
                 log.error("Email not verified for: {}", email);
                 throw new MemberException(MemberErrorCode.EMAIL_NOT_VERIFIED);
             }
+
+            // role을 RoleType으로 변환
+            RoleType roleType = switch (role.toLowerCase()) {
+                case "business" -> RoleType.ROLE_BUSINESS;
+                case "admin" -> RoleType.ROLE_ADMIN;
+                default -> RoleType.ROLE_USER;
+            };
 
             // 회원 조회 또는 생성
             Member member = memberRepository.findByBasicInfo_Email(email)
@@ -224,7 +230,7 @@ public class MemberCommandService {
                     name, 
                     "google", 
                     payload.getSubject(),
-                    RoleType.ROLE_USER  // 기본 역할
+                    roleType  // 전달받은 role 사용
                 ));
 
             // 토큰 생성

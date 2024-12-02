@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -151,14 +153,13 @@ public class MemberApiController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 토큰")
     })
     @PostMapping("/oauth2/google/callback")
-    public ResponseEntity<ApiResponse<TokenDto>> googleCallback(
-            @RequestBody @Valid GoogleCallbackRequest request) {
-        log.debug("Received Google callback request with token length: {}", 
-            request.getIdToken().length());
-        
-        TokenDto tokenDto = memberCommandService.handleGoogleCallback(request.getIdToken());
-        return ResponseEntity.ok(ApiResponse.success(tokenDto, 
-            messageUtils.getMessage("success.oauth2.login")));
+    public ResponseEntity<ApiResponse<TokenDto>> handleGoogleCallback(
+            @RequestBody GoogleCallbackRequest request) {
+        TokenDto tokenDto = memberCommandService.handleGoogleCallback(
+            request.getIdToken(), 
+            request.getRole()
+        );
+        return ResponseEntity.ok(ApiResponse.success(tokenDto));
     }
     
     @GetMapping("/me")

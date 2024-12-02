@@ -19,9 +19,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.env.Environment;
 
 @Component
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final ObjectMapper objectMapper;
     private final MessageUtils messageUtils;
     private final AppConfig appConfig;
+    private final Environment environment;
 
     @Override 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -43,14 +46,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtTokenProvider.createToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
         
-        String platform = request.getParameter("platform");
-        String appType = request.getParameter("app_type");
+        String platform = request.getParameter("platform") != null ? 
+            request.getParameter("platform") : "web";
+        String appType = request.getParameter("app_type") != null ? 
+            request.getParameter("app_type") : "app";
+        
+        String locale = LocaleContextHolder.getLocale().getLanguage();
+        
         boolean isNativeApp = "android".equals(platform) || "ios".equals(platform);
 
         if (isNativeApp) {
             handleNativeAppResponse(response, accessToken, refreshToken);
         } else {
-            handleWebResponse(response, accessToken, refreshToken, platform, appType);
+            handleWebResponse(response, accessToken, refreshToken, platform, appType, locale);
         }
     }
 
@@ -68,35 +76,36 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     private void handleWebResponse(HttpServletResponse response, String accessToken, String refreshToken,
-            String platform, String appType) throws IOException {
+            String platform, String appType, String locale) throws IOException {
         
         String redirectUri;
+        boolean isDev = Arrays.asList(environment.getActiveProfiles()).contains("dev");
         
-        // 플랫폼별 리다이렉트 URI 결정
-        switch (platform) {
-            case "web":
-                // 웹 플랫폼
+        if ("web".equals(platform)) {
+            if (isDev) {
                 redirectUri = "app".equals(appType)
-                    ? "https://app.reward-factory.shop/auth/callback"
-                    : "https://business.reward-factory.shop/auth/callback";
-                break;
-                
-            case "desktop":
-                // 데스크톱 앱 플랫폼
-                redirectUri = UriComponentsBuilder
-                    .fromUriString("reward-app://auth/callback")
-                    .queryParam("accessToken", accessToken)
-                    .queryParam("refreshToken", refreshToken)
-                    .build()
-                    .toUriString();
-                break;
-                
-            default:
-                throw new IllegalArgumentException("Unknown platform: " + platform);
+                    ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
+                    : String.format("http://localhost:46151/#/%s/auth/callback", locale);
+            } else {
+                redirectUri = "app".equals(appType)
+                    ? String.format("https://app.reward-factory.shop/#/%s/auth/callback", locale)
+                    : String.format("https://business.reward-factory.shop/#/%s/auth/callback", locale);
+            }
+        } else if ("desktop".equals(platform)) {
+            redirectUri = UriComponentsBuilder
+                .fromUriString("reward-app://auth/callback")
+                .queryParam("accessToken", accessToken)
+                .queryParam("refreshToken", refreshToken)
+                .queryParam("locale", locale)
+                .build()
+                .toUriString();
+        } else {
+            redirectUri = isDev 
+                ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
+                : String.format("https://app.reward-factory.shop/#/%s/auth/callback", locale);
         }
 
         if ("desktop".equals(platform)) {
-            // 데스크톱의 경우 쿠키 없이 바로 리다이렉트
             response.sendRedirect(redirectUri);
             return;
         }

@@ -11,4 +11,6 @@ public class GoogleCallbackRequest {
     @NotNull(message = "ID token is required")
     @NotEmpty(message = "ID token cannot be empty")
     private String idToken;
+    
+    private String role = "user";  // 기본값 설정
 } 
