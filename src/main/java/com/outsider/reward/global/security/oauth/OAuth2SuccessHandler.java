@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 @Component
 @RequiredArgsConstructor
@@ -42,17 +43,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtTokenProvider.createToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
         
-        String userAgent = request.getHeader("User-Agent");
-        boolean isMobile = userAgent != null && 
-            (userAgent.contains("Android") || userAgent.contains("iPhone") || userAgent.contains("iPad"));
+        // 웹 브라우저와 네이티브 앱 구분
+        String platform = request.getParameter("platform");
+        boolean isNativeApp = "android".equals(platform) || "ios".equals(platform);
 
-        String locale = request.getParameter("locale");
-        if (locale == null) {
-            locale = "ko";
-        }
+        // LocaleContextHolder에서 locale 가져오기
+        String locale = LocaleContextHolder.getLocale().getLanguage();
 
-        if (isMobile) {
-            // 모바일용 응답 - 토큰만 전송
+        if (isNativeApp) {
+            // 네이티브 앱용 응답 - 토큰만 전송
             TokenDto tokenDto = new TokenDto(accessToken, refreshToken);
             ApiResponse<TokenDto> apiResponse = ApiResponse.success(
                 tokenDto, 
@@ -63,7 +62,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
         } else {
-            // 웹용 응답 - 쿠키 설정 및 리다이렉트
+            // 웹 브라우저용 응답 (모바일 웹 포함) - 쿠키 설정 및 리다이렉트
             ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
                 .path("/")
                 .domain(appConfig.getCookie().getDomain())
