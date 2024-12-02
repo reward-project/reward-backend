@@ -27,9 +27,9 @@ app:
   frontend:
     url: https://${FRONTEND_DOMAIN}
   cookie:
-    domain: .${BACKEND_DOMAIN}
+    domain: ${DOMAIN}
     secure: true
-    same-site: Strict
+    same-site: Lax
 
 minio:
   url: ${MINIO_URL}
