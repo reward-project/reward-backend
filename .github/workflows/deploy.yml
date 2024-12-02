@@ -45,7 +45,12 @@ jobs:
         debug: true
         port: 2221 # 기본 포트 대신 2221 사용
         script: |
-          cd /var/services/homes/dudnjsckrgo/docker/reward-backend
-          /usr/local/bin/docker-compose pull
-          /usr/local/bin/docker-compose down
-          /usr/local/bin/docker-compose up -d
+            export PATH=/usr/local/bin:$PATH
+          
+            # 프로젝트 디렉터리로 이동
+            cd /var/services/homes/dudnjsckrgo/docker/reward-backend
+          
+            # Docker Compose 실행
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
