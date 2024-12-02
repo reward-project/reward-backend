@@ -7,6 +7,8 @@ import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.command.domain.OAuthProvider;
 import com.outsider.reward.domain.member.command.domain.RefreshToken;
 import com.outsider.reward.domain.member.command.domain.RefreshTokenRepository;
+import com.outsider.reward.domain.member.command.domain.Role;
+import com.outsider.reward.domain.member.command.domain.RoleRepository;
 import com.outsider.reward.domain.member.command.domain.RoleType;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
 import com.outsider.reward.domain.member.command.dto.TokenDto;
@@ -59,7 +61,7 @@ public class MemberCommandService {
             // 새로운 역할 추가
             member.addRole(roleType);
             // 변경사항 저장
-            memberRepository.save(member);
+            memberRepository.save(member); 
             return member.getId();
         }
         
@@ -183,7 +185,7 @@ public class MemberCommandService {
         
         member.addOAuthProvider(oAuthProvider);
         member.verifyEmail();
-        member.addRole(roleType);
+        member.addRole(roleType);  // Role 대신 RoleType 직접 사용
         
         return memberRepository.save(member);
     }
@@ -280,7 +282,7 @@ public class MemberCommandService {
             passwordEncoder.encode(command.getPassword())
         );
         
-        member.addRole(roleType);
+        member.addRole(roleType);  // Role 대신 RoleType 직접 사용
         member.setEmailVerified(true);
         
         return memberRepository.save(member).getId();

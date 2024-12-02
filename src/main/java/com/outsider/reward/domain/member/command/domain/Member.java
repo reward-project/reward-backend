@@ -28,13 +28,14 @@ public class Member {
     private boolean emailVerified;
     private LocalDateTime createdAt;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(
         name = "member_roles",
-        joinColumns = @JoinColumn(name = "member_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
+        joinColumns = @JoinColumn(name = "member_id")
     )
-    private Set<Role> roles = new HashSet<>();
+    @Column(name = "role")
+    private Set<RoleType> roles = new HashSet<>();
 
     public static Member createMember(String email, String name, String nickname, String password) {
         Member member = new Member();
@@ -43,7 +44,6 @@ public class Member {
         member.createdAt = LocalDateTime.now();
         member.oAuthProviders = new ArrayList<>();
         member.roles = new HashSet<>();
-        member.addRole(RoleType.ROLE_USER);
         return member;
     }
 
@@ -107,21 +107,20 @@ public class Member {
     }
 
     public void addRole(RoleType roleType) {
-        this.roles.add(new Role(roleType));
+        this.roles.add(roleType);
     }
 
     public void removeRole(RoleType roleType) {
-        this.roles.removeIf(role -> role.getRoleType() == roleType);
+        this.roles.remove(roleType);
     }
 
     public boolean hasRole(RoleType roleType) {
-        return this.roles.stream()
-            .anyMatch(role -> role.getRoleType() == roleType);
+        return this.roles.contains(roleType);
     }
 
     public Set<String> getRoleNames() {
         return this.roles.stream()
-            .map(Role::getRoleName)
+            .map(RoleType::name)
             .collect(Collectors.toSet());
     }
 } 
