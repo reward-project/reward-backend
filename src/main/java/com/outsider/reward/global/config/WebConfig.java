@@ -23,6 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
             "http://localhost:*",
             "http://127.0.0.1:*",
             "http://10.0.2.2:*",
+            "https://app.reward-factory.shop",
             "https://accounts.google.com"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
