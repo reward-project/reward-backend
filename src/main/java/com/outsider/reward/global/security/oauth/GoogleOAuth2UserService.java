@@ -2,6 +2,8 @@ package com.outsider.reward.global.security.oauth;
 
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
+import com.outsider.reward.domain.member.command.domain.OAuthProvider;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -21,23 +23,30 @@ public class GoogleOAuth2UserService extends DefaultOAuth2UserService {
         
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
+        String sub = oauth2User.getAttribute("sub");  // Google의 고유 식별자
         
         Member member = memberRepository.findByBasicInfo_Email(email)
-                .orElseGet(() -> createMember(email, name));
+                .orElseGet(() -> createMember(email, name, sub));
                 
         return new CustomOAuth2User(member, oauth2User.getAttributes());
     }
 
-    private Member createMember(String email, String name) {
-        Member member = Member.builder()
-                .email(email)
-                .name(name)
-                .nickname(name)
-                .password("")
-                .build();
+    private Member createMember(String email, String name, String sub) {
+        Member member = Member.createMember(
+            email,
+            name,
+            name,  // nickname
+            ""     // password
+        );
         
-        member.setOAuthInfo("google", email);
-        member.setEmailVerified(true);
+        OAuthProvider oAuthProvider = OAuthProvider.builder()
+            .member(member)
+            .provider("google")
+            .providerId(sub)
+            .build();
+        
+        member.addOAuthProvider(oAuthProvider);
+        member.verifyEmail();
         
         return memberRepository.save(member);
     }

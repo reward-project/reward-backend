@@ -3,6 +3,10 @@ package com.outsider.reward.domain.member.command.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Table(name = "members")
@@ -16,21 +20,38 @@ public class Member {
     @Embedded
     private MemberBasicInfo basicInfo;
 
-    private boolean emailVerified;
-    private String provider;    // OAuth2 제공자 (google, kakao 등)
-    private String providerId;  // OAuth2 제공자의 식별자
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OAuthProvider> oAuthProviders = new ArrayList<>();
 
-    // Add this field and getter if you need creation time
+    private boolean emailVerified;
     private LocalDateTime createdAt;
 
-    @Builder
-    public Member(String email, String password, String name, String nickname) {
-        this.basicInfo = new MemberBasicInfo(name, email, password, nickname);
-        this.emailVerified = false;
+    public static Member createMember(String email, String name, String nickname, String password) {
+        Member member = new Member();
+        member.basicInfo = new MemberBasicInfo(email, name, nickname, password);
+        member.emailVerified = false;
+        member.createdAt = LocalDateTime.now();
+        member.oAuthProviders = new ArrayList<>();
+        return member;
+    }
+
+    public void addOAuthProvider(OAuthProvider provider) {
+        this.oAuthProviders.add(provider);
     }
 
     public void verifyEmail() {
         this.emailVerified = true;
+    }
+
+    public boolean hasProvider(String provider) {
+        return this.oAuthProviders.stream()
+            .anyMatch(p -> p.getProvider().equals(provider));
+    }
+
+    public Optional<OAuthProvider> getProvider(String provider) {
+        return this.oAuthProviders.stream()
+            .filter(p -> p.getProvider().equals(provider))
+            .findFirst();
     }
 
     public void updatePassword(String newPassword) {
@@ -43,11 +64,6 @@ public class Member {
 
     public void updateProfileImage(String imageUrl) {
         this.basicInfo.updateProfileImage(imageUrl);
-    }
-
-    public void setOAuthInfo(String provider, String providerId) {
-        this.provider = provider;
-        this.providerId = providerId;
     }
 
     public void setEmailVerified(boolean verified) {
