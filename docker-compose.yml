@@ -10,6 +10,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=1234
       - MYSQL_DATABASE=reward
+      - MYSQL_USER=reward
+      - MYSQL_PASSWORD=rewardkjkj
       - TZ=Asia/Seoul
     command:
       - --character-set-server=utf8mb4
