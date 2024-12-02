@@ -22,7 +22,6 @@ import com.outsider.reward.domain.member.exception.MemberErrorCode;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider {
@@ -58,12 +57,16 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
 
-        return Jwts.builder()
+        String refreshToken = Jwts.builder()
                 .claim("sub", email)
                 .claim("iat", now)
                 .claim("exp", validity)
                 .signWith(key)
                 .compact();
+
+        refreshTokenRepository.save(new RefreshToken(refreshToken, email));
+                
+        return refreshToken;
     }
 
     public Authentication getAuthentication(String token) {
@@ -95,24 +98,25 @@ public class JwtTokenProvider {
     }
 
     public TokenDto refreshAccessToken(String refreshToken) {
+        // 1. 기존 리프레시 토큰 검증
         if (!validateToken(refreshToken)) {
             throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
         }
         
         String email = getEmailFromToken(refreshToken);
         
+        // 2. DB에서 토큰 확인
         RefreshToken savedToken = refreshTokenRepository.findByRefreshToken(refreshToken)
             .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
             
-        if (!savedToken.getEmail().equals(email)) {
-            throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
-        }
-        
+        // 3. 새로운 토큰 쌍 발급
         String newAccessToken = createToken(email);
+        String newRefreshToken = createRefreshToken(email);
         
-        return TokenDto.builder()
-            .accessToken(newAccessToken)
-            .refreshToken(refreshToken)
-            .build();
+        // 4. 기존 토큰 삭제 및 새 토큰 저장
+        refreshTokenRepository.deleteById(refreshToken);
+        refreshTokenRepository.save(new RefreshToken(newRefreshToken, email));
+        
+        return new TokenDto(newAccessToken, newRefreshToken);
     }
 } 

@@ -7,8 +7,6 @@ import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.command.domain.OAuthProvider;
 import com.outsider.reward.domain.member.command.domain.RefreshToken;
 import com.outsider.reward.domain.member.command.domain.RefreshTokenRepository;
-import com.outsider.reward.domain.member.command.domain.Role;
-import com.outsider.reward.domain.member.command.domain.RoleRepository;
 import com.outsider.reward.domain.member.command.domain.RoleType;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
 import com.outsider.reward.domain.member.command.dto.TokenDto;
@@ -102,13 +100,15 @@ public class MemberCommandService {
 
     @Transactional
     public TokenDto refresh(String refreshToken) {
+        // 1. 리프레시 토큰 검증
         RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
                 
+        // 2. 새로운 토큰 쌍 생성
         String newAccessToken = jwtTokenProvider.createToken(token.getEmail());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(token.getEmail());
         
-        // 기존 토큰 삭제 후 새 토큰 저장
+        // 3. 기존 토큰 삭제 후 새 토큰 저장
         refreshTokenRepository.deleteById(token.getRefreshToken());
         refreshTokenRepository.save(new RefreshToken(newRefreshToken, token.getEmail()));
         
