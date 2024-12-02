@@ -10,7 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AppConfig {
-    private Frontend frontend;
     private Cookie cookie;
 
     @Getter

@@ -33,7 +33,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final MessageUtils messageUtils;
     private final AppConfig appConfig;
 
-    @Override
+    @Override 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException {
         
@@ -43,12 +43,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtTokenProvider.createToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
         
-        // 웹 브라우저와 네이티브 앱 구분
         String platform = request.getParameter("platform");
+        String redirectUri = request.getParameter("redirect_uri");
         boolean isNativeApp = "android".equals(platform) || "ios".equals(platform);
-
-        // LocaleContextHolder에서 locale 가져오기
-        String locale = LocaleContextHolder.getLocale().getLanguage();
 
         if (isNativeApp) {
             // 네이티브 앱용 응답 - 토큰만 전송
@@ -84,13 +81,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
             response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-            // 리다이렉트 URL 생성 및 리다이렉트
-            String redirectUrl = UriComponentsBuilder
-                .fromUriString(appConfig.getFrontend().getUrl())
-                .fragment("/" + locale + "/auth/callback")
-                .build().toUriString();
-
-            response.sendRedirect(redirectUrl);
+            response.sendRedirect(redirectUri);
         }
     }
 } 
