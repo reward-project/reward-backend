@@ -15,7 +15,7 @@ spring:
       client:
         registration:
           google:
-            redirect-uri: https://${DOMAIN}/login/oauth2/code/google
+            redirect-uri: https://${BACKEND_DOMAIN}/login/oauth2/code/google
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
@@ -25,9 +25,9 @@ spring:
 
 app:
   frontend:
-    url: https://${DOMAIN}
+    url: https://${FRONTEND_DOMAIN}
   cookie:
-    domain: .${DOMAIN}
+    domain: .${BACKEND_DOMAIN}
     secure: true
     same-site: Strict
 
