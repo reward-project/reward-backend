@@ -70,20 +70,29 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private void handleWebResponse(HttpServletResponse response, String accessToken, String refreshToken,
             String platform, String appType) throws IOException {
         
-        // 플랫폼과 앱 타입에 따른 리다이렉트 URI 결정
         String redirectUri;
-        if ("web".equals(platform)) {
-            redirectUri = "app".equals(appType) 
-                ? "https://app.reward-factory.shop/auth/callback"
-                : "https://business.reward-factory.shop/auth/callback";
-        } else {
-            // 데스크톱 플랫폼 - 커스텀 URL 스킴으로 리다이렉트
-            redirectUri = UriComponentsBuilder
-                .fromUriString("reward-app://auth/callback")
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
-                .build()
-                .toUriString();
+        
+        // 플랫폼별 리다이렉트 URI 결정
+        switch (platform) {
+            case "web":
+                // 웹 플랫폼
+                redirectUri = "app".equals(appType)
+                    ? "https://app.reward-factory.shop/auth/callback"
+                    : "https://business.reward-factory.shop/auth/callback";
+                break;
+                
+            case "desktop":
+                // 데스크톱 앱 플랫폼
+                redirectUri = UriComponentsBuilder
+                    .fromUriString("reward-app://auth/callback")
+                    .queryParam("accessToken", accessToken)
+                    .queryParam("refreshToken", refreshToken)
+                    .build()
+                    .toUriString();
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Unknown platform: " + platform);
         }
 
         if ("desktop".equals(platform)) {
@@ -92,7 +101,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
-        // 웹의 경우 기존 쿠키 처리 로직
+        // 웹의 경우 쿠키 설정
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
             .path("/")
             .domain(appConfig.getCookie().getDomain())
