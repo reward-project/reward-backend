@@ -4,7 +4,6 @@ import com.outsider.reward.global.security.jwt.JwtAuthenticationFilter;
 import com.outsider.reward.global.security.jwt.JwtTokenProvider;
 import com.outsider.reward.global.security.oauth.GoogleOAuth2UserService;
 import com.outsider.reward.global.security.oauth.OAuth2SuccessHandler;
-import com.outsider.reward.global.security.oauth.OAuth2FailureHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +31,6 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final OAuth2FailureHandler oAuth2FailureHandler;
     private final CorsConfigurationSource corsConfigurationSource;
     private final GetOrFullAuthorizationManager getOrFullAuthorizationManager;
     private final OAuth2AuthorizationRequestCustomizer oAuth2AuthorizationRequestCustomizer;
@@ -82,7 +80,6 @@ public class SecurityConfig {
                     .userService(googleOAuth2UserService)
                 )
                 .successHandler(oAuth2SuccessHandler)
-                .failureHandler(oAuth2FailureHandler)
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                     UsernamePasswordAuthenticationFilter.class);

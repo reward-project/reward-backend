@@ -19,8 +19,8 @@ services:
       - --default-authentication-plugin=mysql_native_password
     volumes:
       - mysql_volume:/var/lib/mysql
-    networks:
-      - reward-network
+    # networks:
+    #   - reward-network
     restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
@@ -28,37 +28,37 @@ services:
       timeout: 5s
       retries: 10
 
-  redis:
-    image: redis:alpine
-    container_name: reward-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - reward-network
-    command: redis-server --appendonly yes
-    restart: always
+  # redis:
+  #   image: redis:alpine
+  #   container_name: reward-redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - reward-network
+  #   command: redis-server --appendonly yes
+  #   restart: always
 
-  minio:
-    image: minio/minio:latest
-    container_name: reward-minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    volumes:
-      - minio_data:/data
-    command: server --console-address ":9001" /data
-    networks:
-      - reward-network
-    restart: always
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: reward-minio
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   environment:
+  #     - MINIO_ROOT_USER=minioadmin
+  #     - MINIO_ROOT_PASSWORD=minioadmin
+  #   volumes:
+  #     - minio_data:/data
+  #   command: server --console-address ":9001" /data
+  #   networks:
+  #     - reward-network
+  #   restart: always
 
 volumes:
   mysql_volume:
     driver: local
   minio_data:
 
-networks:
-  reward-network:
-    driver: bridge
+# networks:
+#   reward-network:
+#     driver: bridge
