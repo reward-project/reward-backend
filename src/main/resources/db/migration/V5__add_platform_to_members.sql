@@ -1,0 +1,1 @@
+ALTER TABLE members ADD COLUMN platform VARCHAR(50) DEFAULT 'web';
