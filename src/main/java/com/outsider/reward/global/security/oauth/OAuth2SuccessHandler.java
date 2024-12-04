@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
+import jakarta.servlet.http.Cookie;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -46,11 +49,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtTokenProvider.createToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
         
-        String platform = request.getParameter("platform") != null ? 
-            request.getParameter("platform") : "web";
-        String appType = request.getParameter("app_type") != null ? 
-            request.getParameter("app_type") : "app";
-        
+        String platform = getCookieValue(request, "platform");
+        String role = getCookieValue(request, "role");
+
+        log.info("OAuth2 Success - Email: {}, Platform: {}, Role: {}", email, platform, role);
+
+        if (platform == null) {
+            platform = "web";
+        }
+        if (role == null) {
+            role = "user";
+        }
+
         String locale = LocaleContextHolder.getLocale().getLanguage();
         
         boolean isNativeApp = "android".equals(platform) || "ios".equals(platform);
@@ -58,8 +68,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         if (isNativeApp) {
             handleNativeAppResponse(response, accessToken, refreshToken);
         } else {
-            handleWebResponse(response, accessToken, refreshToken, platform, appType, locale);
+            handleWebResponse(response, accessToken, refreshToken, platform, role, locale);
         }
+    }
+
+    private String getCookieValue(HttpServletRequest request, String cookieName) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookieName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 
     private void handleNativeAppResponse(HttpServletResponse response, String accessToken, String refreshToken) 
@@ -76,29 +97,27 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     private void handleWebResponse(HttpServletResponse response, String accessToken, String refreshToken,
-            String platform, String appType, String locale) throws IOException {
+            String platform, String role, String locale) throws IOException {
         
         String redirectUri;
         boolean isDev = Arrays.asList(environment.getActiveProfiles()).contains("dev");
         
         if ("web".equals(platform)) {
             if (isDev) {
-                redirectUri = "app".equals(appType)
+                redirectUri = "app".equals(role)
                     ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
                     : String.format("http://localhost:46151/#/%s/auth/callback", locale);
             } else {
-                redirectUri = "app".equals(appType)
+                redirectUri = "app".equals(role)
                     ? String.format("https://app.reward-factory.shop/#/%s/auth/callback", locale)
                     : String.format("https://business.reward-factory.shop/#/%s/auth/callback", locale);
             }
         } else if ("desktop".equals(platform)) {
-            redirectUri = UriComponentsBuilder
-                .fromUriString("reward-app://auth/callback")
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
-                .queryParam("locale", locale)
-                .build()
-                .toUriString();
+            redirectUri = String.format("http://localhost:8765/auth/callback?accessToken=%s&refreshToken=%s",
+                URLEncoder.encode(accessToken, StandardCharsets.UTF_8.toString()),
+                URLEncoder.encode(refreshToken, StandardCharsets.UTF_8.toString()));
+            
+            log.info("Redirecting to desktop: {}", redirectUri);
         } else {
             redirectUri = isDev 
                 ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
@@ -106,6 +125,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         }
 
         if ("desktop".equals(platform)) {
+            log.info("Redirecting to desktop: {}", redirectUri);
             response.sendRedirect(redirectUri);
             return;
         }
