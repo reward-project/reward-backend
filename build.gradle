@@ -68,6 +68,9 @@ dependencies {
 	implementation "com.google.api-client:google-api-client:${googleApiClientVersion}"
 	implementation "com.google.oauth-client:google-oauth-client:${googleOAuthClientVersion}"
 	implementation "com.google.http-client:google-http-client-gson:${googleHttpClientVersion}"
+	// MapStruct
+	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
 	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 	annotationProcessor "org.projectlombok:lombok-mapstruct-binding:0.2.0"
