@@ -104,12 +104,12 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         if ("web".equals(platform)) {
             if (isDev) {
                 redirectUri = "user".equals(role)
-                    ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
-                    : String.format("http://localhost:46151/#/%s/auth/callback", locale);
+                    ? String.format("http://localhost:46151/%s/auth/callback", locale)
+                    : String.format("http://localhost:46151/%s/auth/callback", locale);
             } else {
                 redirectUri = "user".equals(role)
-                    ? String.format("https://app.reward-factory.shop/#/%s/auth/callback", locale)
-                    : String.format("https://business.reward-factory.shop/#/%s/auth/callback", locale);
+                    ? String.format("https://app.reward-factory.shop/%s/auth/callback", locale)
+                    : String.format("https://business.reward-factory.shop/%s/auth/callback", locale);
             }
         } else if ("desktop".equals(platform)) {
             redirectUri = String.format("http://localhost:8765/auth/callback?accessToken=%s&refreshToken=%s",
@@ -119,8 +119,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             log.info("Redirecting to desktop: {}", redirectUri);
         } else {
             redirectUri = isDev 
-                ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
-                : String.format("https://app.reward-factory.shop/#/%s/auth/callback", locale);
+                ? String.format("http://localhost:46151/%s/auth/callback", locale)
+                : String.format("https://app.reward-factory.shop/%s/auth/callback", locale);
         }
 
         if ("desktop".equals(platform)) {
