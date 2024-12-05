@@ -89,3 +89,7 @@ google:
 app:
   frontend:
     url: ${FRONTEND_URL:http://localhost:46151}  # 개발 환경 기본값
+
+discord:
+  webhook:
+    url: https://discord.com/api/webhooks/1314046241222557807/KUbSb5G5jb7p9JAnWsM0FSkpMRT2iloCVyk3Lpe6RnzF8bnP4IQzMn6Ty6Ss60PC88v4

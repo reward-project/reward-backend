@@ -1,5 +1,6 @@
 package com.outsider.reward.global.common.exception;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -7,13 +8,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import org.springframework.http.HttpStatus;
 
 import com.outsider.reward.global.common.response.ApiResponse;
 import com.outsider.reward.global.i18n.MessageUtils;
+import com.outsider.reward.global.common.service.DiscordWebhookService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 @Slf4j
 @RestControllerAdvice
@@ -21,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
     
     private final MessageUtils messageUtils;
+    private final DiscordWebhookService discordWebhookService;
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
@@ -61,6 +66,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("Unexpected Exception", e);
+        
+        // 스택 트레이스를 문자열로 변환
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        
+        // 디스코드로 에러 알림 전송
+        discordWebhookService.sendErrorMessage(
+            e.getMessage(), 
+            sw.toString()
+        );
+        
         return ResponseEntity
             .internalServerError()
             .body(ApiResponse.error(null, messageUtils.getMessage("error.server")));

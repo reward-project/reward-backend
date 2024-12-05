@@ -1,32 +1,31 @@
 package com.outsider.reward.global.security.oauth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.outsider.reward.global.security.jwt.JwtTokenProvider;
-import com.outsider.reward.domain.member.command.dto.TokenDto;
-import com.outsider.reward.global.i18n.MessageUtils;
-import com.outsider.reward.global.common.response.ApiResponse;
-import com.outsider.reward.global.config.AppConfig;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Arrays;
 
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.outsider.reward.domain.member.command.dto.TokenDto;
+import com.outsider.reward.global.common.response.ApiResponse;
+import com.outsider.reward.global.config.AppConfig;
+import com.outsider.reward.global.i18n.MessageUtils;
+import com.outsider.reward.global.security.jwt.JwtTokenProvider;
+
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.core.env.Environment;
-import jakarta.servlet.http.Cookie;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -104,11 +103,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         
         if ("web".equals(platform)) {
             if (isDev) {
-                redirectUri = "app".equals(role)
+                redirectUri = "user".equals(role)
                     ? String.format("http://localhost:46151/#/%s/auth/callback", locale)
                     : String.format("http://localhost:46151/#/%s/auth/callback", locale);
             } else {
-                redirectUri = "app".equals(role)
+                redirectUri = "user".equals(role)
                     ? String.format("https://app.reward-factory.shop/#/%s/auth/callback", locale)
                     : String.format("https://business.reward-factory.shop/#/%s/auth/callback", locale);
             }
