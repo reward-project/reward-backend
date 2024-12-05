@@ -105,7 +105,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             if (isDev) {
                 redirectUri = "user".equals(role)
                     ? String.format("http://localhost:46151/%s/auth/callback", locale)
-                    : String.format("http://localhost:46151/%s/auth/callback", locale);
+                    : String.format("http://localhost:46152/%s/auth/callback", locale);
             } else {
                 redirectUri = "user".equals(role)
                     ? String.format("https://app.reward-factory.shop/%s/auth/callback", locale)
