@@ -7,6 +7,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.outsider.reward.domain.platform.command.domain.PlatformDomain;
+import com.outsider.reward.domain.platform.command.domain.PlatformDomainStatus;
+import com.outsider.reward.domain.platform.command.domain.PlatformStatus;
 
 @Entity
 @Getter
@@ -33,6 +39,9 @@ public class Platform {
 
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "platform", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PlatformDomain> domains = new ArrayList<>();
+
     @Builder
     public Platform(String name, String displayName, String description) {
         this.name = name;
@@ -55,5 +64,29 @@ public class Platform {
     public void deactivate() {
         this.status = PlatformStatus.INACTIVE;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void addDomain(String domain) {
+        if (domain == null) {
+            throw new IllegalArgumentException("Domain cannot be null");
+        }
+        PlatformDomain platformDomain = PlatformDomain.createDomain(this, domain, PlatformDomainStatus.ACTIVE);
+        this.domains.add(platformDomain);
+    }
+
+    public boolean hasDomain(String domain) {
+        return domains.stream()
+                .anyMatch(platformDomain -> platformDomain.getDomain().equals(domain));
+    }
+
+    public void setDomains(List<PlatformDomain> domains) {
+        this.domains = domains;
+        if (domains != null) {
+            domains.forEach(domain -> domain.setPlatform(this));
+        }
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

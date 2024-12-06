@@ -31,28 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("Request URI: {}", request.getRequestURI());
         log.info("Request Method: {}", request.getMethod());
 
-        // Refresh 토큰 엔드포인트 처리
-        if (request.getRequestURI().equals("/api/v1/members/refresh")) {
-            String refreshToken = request.getHeader("Authorization-Refresh");
-            log.info("Refresh Token: {}", refreshToken != null ? "Present" : "Not Present");
-            
-            if (StringUtils.hasText(refreshToken) && refreshToken.startsWith("Bearer ")) {
-                refreshToken = refreshToken.substring(7);
-                try {
-                    if (tokenProvider.validateToken(refreshToken)) {
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
-                } catch (Exception e) {
-                    log.error("Refresh Token validation failed", e);
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
-                }
-            }
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-        
         // 기존 Access 토큰 처리
         String jwt = resolveToken(request);
         log.info("JWT Token: {}", jwt != null ? "Present" : "Not Present");

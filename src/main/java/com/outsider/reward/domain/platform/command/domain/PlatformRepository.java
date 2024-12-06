@@ -9,4 +9,5 @@ public interface PlatformRepository extends JpaRepository<Platform, Long> {
     Optional<Platform> findByName(String name);
     List<Platform> findByStatus(PlatformStatus status);
     boolean existsByName(String name);
+    List<Platform> findByNameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(String name, String displayName);
 }

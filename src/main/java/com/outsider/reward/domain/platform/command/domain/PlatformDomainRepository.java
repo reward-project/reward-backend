@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface PlatformDomainRepository extends JpaRepository<PlatformDomain, Long> {
-    List<PlatformDomain> findByPlatformAndIsActiveTrue(Platform platform);
-    boolean existsByDomainAndIsActiveTrue(String domain);
+    List<PlatformDomain> findByPlatformAndStatus(Platform platform, PlatformDomainStatus status);
+    boolean existsByDomainAndStatus(String domain, PlatformDomainStatus status);
 }

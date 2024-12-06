@@ -113,11 +113,10 @@ public class MemberApiController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestHeader(value = "Authorization-Refresh", required = false) String refreshToken) {
+            @RequestBody(required = false) TokenRefreshRequest request) {
         
-        if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
-            refreshToken = refreshToken.substring(7);
-            memberCommandService.logout(refreshToken, userDetails.getUsername());
+        if (request != null && request.getRefreshToken() != null) {
+            memberCommandService.logout(request.getRefreshToken(), userDetails.getUsername());
         } else {
             memberCommandService.logoutAll(userDetails.getUsername());
         }
