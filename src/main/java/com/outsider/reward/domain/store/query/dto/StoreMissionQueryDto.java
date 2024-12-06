@@ -23,6 +23,8 @@ public class StoreMissionQueryDto {
     private LocalDate endDate;
     private String registrantId;
     private String rewardId;
+    private Double rewardAmount;
+    private Integer maxRewardsPerDay;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

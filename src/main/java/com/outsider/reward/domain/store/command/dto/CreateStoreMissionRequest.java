@@ -47,11 +47,18 @@ public class CreateStoreMissionRequest {
     @NotBlank(message = "Registrant ID is required")
     private String registrantId;
 
+    @NotNull(message = "Reward amount is required")
+    private Double rewardAmount;
+
+    @NotNull(message = "Max rewards per day is required")
+    private Integer maxRewardsPerDay;
+
     @Builder
     public CreateStoreMissionRequest(String rewardName, String platform, String storeName,
                                    String registrantName, String productLink, String keyword,
                                    String productId, String optionId, LocalDate startDate,
-                                   LocalDate endDate, String registrantId) {
+                                   LocalDate endDate, String registrantId, Double rewardAmount,
+                                   Integer maxRewardsPerDay) {
         this.rewardName = rewardName;
         this.platform = platform;
         this.storeName = storeName;
@@ -63,5 +70,7 @@ public class CreateStoreMissionRequest {
         this.startDate = startDate;
         this.endDate = endDate;
         this.registrantId = registrantId;
+        this.rewardAmount = rewardAmount;
+        this.maxRewardsPerDay = maxRewardsPerDay;
     }
 }

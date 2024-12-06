@@ -58,6 +58,12 @@ public class StoreMission {
     @Column(nullable = false)
     private String rewardId;
 
+    @Column(nullable = false)
+    private Double rewardAmount;
+
+    @Column(nullable = false)
+    private Integer maxRewardsPerDay;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
@@ -68,7 +74,8 @@ public class StoreMission {
     public StoreMission(String rewardName, Platform platform, String storeName,
                        String registrantName, String productLink, String keyword,
                        String productId, String optionId, LocalDate startDate,
-                       LocalDate endDate, String registrantId) {
+                       LocalDate endDate, String registrantId, Double rewardAmount,
+                       Integer maxRewardsPerDay) {
         this.rewardName = rewardName;
         this.platform = platform;
         this.storeName = storeName;
@@ -80,6 +87,8 @@ public class StoreMission {
         this.startDate = startDate;
         this.endDate = endDate;
         this.registrantId = registrantId;
+        this.rewardAmount = rewardAmount;
+        this.maxRewardsPerDay = maxRewardsPerDay;
         this.rewardId = UUID.randomUUID().toString();
     }
 

@@ -80,13 +80,20 @@ public class SecurityConfig {
                 .requestMatchers("/**").access(getOrFullAuthorizationManager)
                 .anyRequest().authenticated()
             )
+            .exceptionHandling(exceptionHandling -> exceptionHandling
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\":\"Unauthorized\"}");
+                })
+            )
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization -> authorization
                     .baseUri("/oauth2/authorization")
                     .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
-                    )
+                )
                 .redirectionEndpoint(redirection -> redirection
                     .baseUri("/login/oauth2/code/*")
                 )
