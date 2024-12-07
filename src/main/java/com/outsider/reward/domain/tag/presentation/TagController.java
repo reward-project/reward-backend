@@ -3,6 +3,8 @@ package com.outsider.reward.domain.tag.presentation;
 import com.outsider.reward.domain.tag.command.application.TagService;
 import com.outsider.reward.global.common.response.ApiResponse;
 import com.outsider.reward.global.security.CustomUserDetails;
+import com.outsider.reward.domain.tag.command.dto.ShareTagRequest;
+import com.outsider.reward.domain.tag.command.domain.TagSharePermission;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +29,7 @@ public class TagController {
             return ResponseEntity.ok(ApiResponse.success(tagService.searchPublicTags(query)));
         }
         
-        // 인증된 사��자는 공개 태그 + 자신의 태그 검색
+        // 인증된 사용자는 공개 태그 + 자신의 태그 검색
         List<String> tags = tagService.searchTags(query, userDetails.getMember().getId());
         return ResponseEntity.ok(ApiResponse.success(tags));
     }
@@ -58,5 +60,15 @@ public class TagController {
     @GetMapping("/popular")
     public ResponseEntity<ApiResponse<List<String>>> getPopularTags() {
         return ResponseEntity.ok(ApiResponse.success(tagService.getPopularTags()));
+    }
+
+    @PostMapping("/{tagId}/share")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<String>> shareTag(
+            @PathVariable Long tagId,
+            @RequestBody ShareTagRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        tagService.shareTag(tagId, request.getSharedWithId(), request.getPermission(), userDetails.getMember().getId());
+        return ResponseEntity.ok(ApiResponse.success("태그가 성공적으로 공유되었습니다."));
     }
 } 

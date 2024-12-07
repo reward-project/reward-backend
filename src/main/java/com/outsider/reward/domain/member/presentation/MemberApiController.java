@@ -106,8 +106,15 @@ public class MemberApiController {
     
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<TokenDto>> refreshToken(@RequestBody TokenRefreshRequest request) {
-        TokenDto tokenDto = jwtTokenProvider.refreshAccessToken(request.getRefreshToken());
-        return ResponseEntity.ok(ApiResponse.success(tokenDto));
+        log.debug("Token refresh request received with token: {}", request.getRefreshToken().substring(0, 10) + "...");
+        try {
+            TokenDto tokenDto = jwtTokenProvider.refreshAccessToken(request.getRefreshToken());
+            log.debug("Token refresh successful");
+            return ResponseEntity.ok(ApiResponse.success(tokenDto));
+        } catch (Exception e) {
+            log.error("Token refresh failed: ", e);
+            throw e;
+        }
     }
     
     @PostMapping("/logout")

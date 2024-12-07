@@ -21,7 +21,7 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     @Query("SELECT t FROM Tag t WHERE t.isPublic = true AND LOWER(t.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Tag> searchPublicTags(@Param("query") String query);
     
-    // �인 태그만 검색
+    // 인 태그만 검색
     @Query("SELECT t FROM Tag t WHERE t.isPublic = false AND t.createdBy = :member AND LOWER(t.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Tag> searchPrivateTags(@Param("query") String query, @Param("member") Member member);
     
@@ -33,4 +33,8 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     
     // 인기 태그 (공개 태그만)
     List<Tag> findTop10ByIsPublicTrueOrderByUseCountDesc();
+    
+    @Query("SELECT t FROM Tag t LEFT JOIN TagShare ts ON t = ts.tag " +
+           "WHERE t.createdBy.id = :userId OR ts.sharedWith.id = :userId")
+    List<Tag> findByUserIdIncludingShared(@Param("userId") Long userId);
 } 

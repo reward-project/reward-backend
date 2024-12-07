@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,9 +23,12 @@ import com.outsider.reward.domain.member.exception.MemberErrorCode;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+
 @Component
 @RequiredArgsConstructor
+@Slf4j  
 public class JwtTokenProvider {
+
 
     private final UserDetailsService userDetailsService;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -98,25 +102,45 @@ public class JwtTokenProvider {
     }
 
     public TokenDto refreshAccessToken(String refreshToken) {
+        log.debug("Refresh token process started with token: {}", refreshToken.substring(0, 10) + "...");
+        
         // 1. 기존 리프레시 토큰 검증
-        if (!validateToken(refreshToken)) {
-            throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
-        }
-        
-        String email = getEmailFromToken(refreshToken);
-        
-        // 2. DB에서 토큰 확인
-        RefreshToken savedToken = refreshTokenRepository.findByRefreshToken(refreshToken)
-            .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
+        try {
+            if (!validateToken(refreshToken)) {
+                log.error("Refresh token validation failed");
+                throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
+            }
             
-        // 3. 새로운 토큰 쌍 발급
-        String newAccessToken = createToken(email);
-        String newRefreshToken = createRefreshToken(email);
-        
-        // 4. 기존 토큰 삭제 및 새 토큰 저장
-        refreshTokenRepository.deleteById(refreshToken);
-        refreshTokenRepository.save(new RefreshToken(newRefreshToken, email));
-        
-        return new TokenDto(newAccessToken, newRefreshToken);
+            String email = getEmailFromToken(refreshToken);
+            log.debug("Email extracted from refresh token: {}", email);
+            
+            // 2. DB에서 토큰 확인
+            RefreshToken savedToken = refreshTokenRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> {
+                    log.error("Refresh token not found in repository");
+                    return new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
+                });
+            
+            log.debug("Saved token found for email: {}", savedToken.getEmail());
+            
+            // 3. 새로운 토큰 쌍 발급
+            String newAccessToken = createToken(email);
+            String newRefreshToken = createRefreshToken(email);
+            
+            log.debug("New tokens created - Access token: {}, Refresh token: {}", 
+                newAccessToken.substring(0, 10) + "...", 
+                newRefreshToken.substring(0, 10) + "...");
+            
+            // 4. 기존 토큰 삭제 및 새 토큰 저장
+            refreshTokenRepository.deleteById(refreshToken);
+            refreshTokenRepository.save(new RefreshToken(newRefreshToken, email));
+            
+            log.debug("Token refresh completed successfully");
+            
+            return new TokenDto(newAccessToken, newRefreshToken);
+        } catch (Exception e) {
+            log.error("Error during token refresh: ", e);
+            throw e;
+        }
     }
 } 
