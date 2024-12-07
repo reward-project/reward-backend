@@ -11,9 +11,12 @@ import com.outsider.reward.domain.tag.command.domain.Tag;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -86,6 +89,12 @@ public class StoreMission {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    @OneToMany(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RewardUsage> usages = new ArrayList<>();
+
+    @OneToOne(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RewardBudget budget;
+
     @Builder
     public StoreMission(String rewardName, Platform platform, String storeName,
                        String registrantName, String productLink, String keyword,
@@ -132,5 +141,69 @@ public class StoreMission {
 
     public void removeTag(Tag tag) {
         this.tags.remove(tag);
+    }
+
+    public int getTotalUsageCount() {
+        return usages.size();
+    }
+
+    public int getTodayUsageCount() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        return (int) usages.stream()
+            .filter(usage -> usage.getUsedAt().isAfter(startOfDay) && 
+                           usage.getUsedAt().isBefore(endOfDay))
+            .count();
+    }
+
+    public double getUsageRate() {
+        if (usages.isEmpty()) return 0.0;
+        long completedCount = usages.stream()
+            .filter(usage -> usage.getStatus() == RewardUsageStatus.COMPLETED)
+            .count();
+        return (double) completedCount / usages.size() * 100;
+    }
+
+    public Map<Integer, Integer> getUsageByHour() {
+        return usages.stream()
+            .collect(Collectors.groupingBy(
+                usage -> usage.getUsedAt().getHour(),
+                Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+            ));
+    }
+
+    public Map<String, Integer> getUsageByDay() {
+        return usages.stream()
+            .collect(Collectors.groupingBy(
+                usage -> usage.getUsedAt().getDayOfWeek().toString(),
+                Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+            ));
+    }
+
+    public int getDurationInDays() {
+        return (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+    }
+
+    public void initializeBudget(double totalBudget) {
+        this.budget = new RewardBudget(this, totalBudget, this.maxRewardsPerDay);
+    }
+
+    public boolean canUseReward(double amount) {
+        return budget != null && budget.canUseReward(amount);
+    }
+
+    public void useReward(double amount) {
+        if (budget == null) {
+            throw new IllegalStateException("Budget not initialized");
+        }
+        budget.useReward(amount);
+    }
+
+    public double getRemainingBudget() {
+        return budget != null ? budget.getRemainingBudget() : 0;
+    }
+
+    public double getBudgetUsageRate() {
+        return budget != null ? budget.getUsageRate() : 0;
     }
 }
