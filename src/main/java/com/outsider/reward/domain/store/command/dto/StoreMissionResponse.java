@@ -1,30 +1,19 @@
 package com.outsider.reward.domain.store.command.dto;
 
-import com.outsider.reward.domain.store.command.domain.Platform;
-import lombok.Builder;
+import com.outsider.reward.domain.store.query.dto.PlatformInfo;
+import com.outsider.reward.domain.store.query.dto.RewardInfo;
+import com.outsider.reward.domain.store.query.dto.StoreInfo;
+import com.outsider.reward.domain.store.query.dto.RegistrantInfo;
+import com.outsider.reward.domain.store.query.dto.common.BaseTimeInfo;
 import lombok.Getter;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
-public class StoreMissionResponse {
-    private Long id;
-    private String rewardName;
-    private Platform platform;
-    private String storeName;
-    private String registrantName;
-    private String productLink;
-    private String keyword;
-    private String productId;
-    private String optionId;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private String registrantId;
-    private String rewardId;
-    private Double rewardAmount;
-    private Integer maxRewardsPerDay;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+@SuperBuilder
+public class StoreMissionResponse extends BaseTimeInfo {
+    private final Long id;
+    private final PlatformInfo platform;
+    private final RewardInfo reward;
+    private final StoreInfo store;
+    private final RegistrantInfo registrant;
 }

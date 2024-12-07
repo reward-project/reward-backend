@@ -33,5 +33,14 @@ public interface PlatformMapper {
         platform.setCreatedAt(LocalDateTime.now());
     }
 
+    @Named("mapDomains")
+    default List<String> mapDomains(List<PlatformDomain> domains) {
+        return domains.stream()
+            .map(PlatformDomain::getDomain)
+            .toList();
+    }
+
+    @Mapping(source = "domains", target = "domains", qualifiedByName = "mapDomains")
     PlatformResponse toResponse(Platform platform);
 }
+

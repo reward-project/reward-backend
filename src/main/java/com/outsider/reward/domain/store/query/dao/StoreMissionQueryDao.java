@@ -1,16 +1,20 @@
 package com.outsider.reward.domain.store.query.dao;
 
 import com.outsider.reward.domain.store.command.domain.StoreMission;
+import com.outsider.reward.domain.store.query.StoreMissionQuery;
+import com.outsider.reward.domain.store.query.dto.StoreMissionQueryDto;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface StoreMissionQueryDao extends JpaRepository<StoreMission, Long> {
+public interface StoreMissionQueryDao extends JpaRepository<StoreMission, Long>, StoreMissionQueryDaoCustom {
     
     @Query("SELECT sm FROM StoreMission sm WHERE sm.registrantId = :registrantId")
     List<StoreMission> findAllByRegistrantId(@Param("registrantId") String registrantId);

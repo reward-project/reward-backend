@@ -2,8 +2,8 @@ package com.outsider.reward.domain.store.query.application;
 
 import com.outsider.reward.domain.store.command.domain.StoreMission;
 import com.outsider.reward.domain.store.command.domain.StoreMissionRepository;
-import com.outsider.reward.domain.store.command.mapper.StoreMissionMapper;
 import com.outsider.reward.domain.store.query.dto.StoreMissionQueryDto;
+import com.outsider.reward.domain.store.query.mapper.StoreMissionQueryMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,25 +18,32 @@ import java.util.stream.Collectors;
 public class StoreMissionQueryServiceImpl implements StoreMissionQueryService {
 
     private final StoreMissionRepository storeMissionRepository;
-    private final StoreMissionMapper storeMissionMapper;
+    private final StoreMissionQueryMapper storeMissionMapper;
 
     @Override
     public Optional<StoreMissionQueryDto> findById(Long id) {
         return storeMissionRepository.findById(id)
-                .map(storeMissionMapper::toQueryDto);
+                .map(storeMissionMapper::toDto);
     }
 
     @Override
-    public List<StoreMissionQueryDto> findByRegistrantId(String registrantId) {
+    public List<StoreMissionQueryDto> findByRegistrantId(Long registrantId) {
         return storeMissionRepository.findByRegistrantId(registrantId).stream()
-                .map(storeMissionMapper::toQueryDto)
+                .map(storeMissionMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<StoreMissionQueryDto> findByRewardId(String rewardId) {
         return storeMissionRepository.findByRewardId(rewardId).stream()
-                .map(storeMissionMapper::toQueryDto)
+                .map(storeMissionMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StoreMissionQueryDto> findByTag(String tag) {
+        return storeMissionRepository.findByTagName(tag).stream()
+                .map(storeMissionMapper::toDto)
                 .collect(Collectors.toList());
     }
 }

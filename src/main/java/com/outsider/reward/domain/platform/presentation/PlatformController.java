@@ -7,6 +7,8 @@ import com.outsider.reward.domain.platform.command.dto.PlatformResponse;
 import com.outsider.reward.domain.platform.command.dto.PlatformDomainResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/platforms")
@@ -60,8 +63,15 @@ public class PlatformController {
     }
 
     @GetMapping("/active")
+    @ResponseBody
     public ResponseEntity<List<PlatformResponse>> getActivePlatforms() {
-        return ResponseEntity.ok(platformService.getActivePlatforms());
+        log.debug("Getting active platforms");
+        List<PlatformResponse> platforms = platformService.getActivePlatforms();
+        log.debug("Active platforms: {}", platforms);
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("Content-Type", "application/json;charset=UTF-8")
+            .body(platforms);
     }
 
     @GetMapping("/pending")
@@ -81,5 +91,10 @@ public class PlatformController {
     public ResponseEntity<Map<String, Boolean>> checkDomainAvailability(@RequestParam String domain) {
         boolean isAvailable = platformService.isDomainAvailable(domain);
         return ResponseEntity.ok(Map.of("available", isAvailable));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PlatformResponse>> getPlatforms() {
+        return ResponseEntity.ok(platformService.getActivePlatforms());
     }
 }

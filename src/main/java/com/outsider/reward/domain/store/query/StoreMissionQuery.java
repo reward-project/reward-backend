@@ -2,11 +2,12 @@ package com.outsider.reward.domain.store.query;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.outsider.reward.domain.store.command.domain.Platform;
+import com.outsider.reward.domain.platform.command.domain.Platform;
 
 @Getter
 @Builder
@@ -24,6 +25,9 @@ public class StoreMissionQuery {
     private final LocalDate endDate;
     private final String registrantId;
     private final String rewardId;
+    private final Double rewardAmount;
+    private final Integer maxRewardsPerDay;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+    private String tag;
 }

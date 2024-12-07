@@ -1,24 +1,25 @@
 package com.outsider.reward.domain.store.command.dto;
 
-import com.outsider.reward.domain.store.command.domain.Platform;
 import com.outsider.reward.domain.store.command.validator.ValidDateRange;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
+@Setter
 @Builder
+@AllArgsConstructor
 @ValidDateRange
 public class CreateStoreMissionRequest {
     
     @NotBlank(message = "Reward name is required")
     private String rewardName;
-
-    @NotBlank(message = "Platform is required")
-    private String platform;
 
     @NotBlank(message = "Store name is required")
     private String storeName;
@@ -44,8 +45,8 @@ public class CreateStoreMissionRequest {
     @NotNull(message = "End date is required")
     private LocalDate endDate;
 
-    @NotBlank(message = "Registrant ID is required")
-    private String registrantId;
+    @NotNull(message = "Registrant ID is required")
+    private Long registrantId;
 
     @NotNull(message = "Reward amount is required")
     private Double rewardAmount;
@@ -53,24 +54,8 @@ public class CreateStoreMissionRequest {
     @NotNull(message = "Max rewards per day is required")
     private Integer maxRewardsPerDay;
 
-    @Builder
-    public CreateStoreMissionRequest(String rewardName, String platform, String storeName,
-                                   String registrantName, String productLink, String keyword,
-                                   String productId, String optionId, LocalDate startDate,
-                                   LocalDate endDate, String registrantId, Double rewardAmount,
-                                   Integer maxRewardsPerDay) {
-        this.rewardName = rewardName;
-        this.platform = platform;
-        this.storeName = storeName;
-        this.registrantName = registrantName;
-        this.productLink = productLink;
-        this.keyword = keyword;
-        this.productId = productId;
-        this.optionId = optionId;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.registrantId = registrantId;
-        this.rewardAmount = rewardAmount;
-        this.maxRewardsPerDay = maxRewardsPerDay;
-    }
+    private Set<String> tags;
+
+    @NotNull(message = "Platform ID is required")
+    private Long platformId;
 }

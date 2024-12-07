@@ -4,14 +4,14 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import com.outsider.reward.domain.store.command.domain.Platform;
 
 @Getter
 @Builder
 public class CreateStoreMissionCommand {
     private final String rewardName;
-    private final Platform platform;
+    private final Long platformId;
     private final String storeName;
     private final String registrantName;
     private final String productLink;
@@ -22,4 +22,8 @@ public class CreateStoreMissionCommand {
     private final LocalDate endDate;
     private final String registrantId;
     private final String rewardId;
+    private final String platformName;
+    private final Double rewardAmount;
+    private final Integer maxRewardsPerDay;
+    private final List<String> tags;
 }
