@@ -87,4 +87,8 @@ public class RewardBudget extends BaseTimeEntity {
     public boolean isExhausted() {
         return remainingBudget <= 0;
     }
+
+    public void setRemainingAmount(double amount) {
+        this.remainingBudget = amount;
+    }
 } 

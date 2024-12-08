@@ -16,4 +16,7 @@ public interface StoreMissionRepository extends JpaRepository<StoreMission, Long
 
     @Query("SELECT sm FROM StoreMission sm JOIN sm.tags t WHERE t.name = :tagName")
     List<StoreMission> findByTagName(@Param("tagName") String tagName);
+
+    @Query("SELECT m FROM StoreMission m WHERE m.endDate < CURRENT_DATE AND m.budget.remainingBudget > 0")
+    List<StoreMission> findExpiredMissionsWithRemainingBudget();
 }

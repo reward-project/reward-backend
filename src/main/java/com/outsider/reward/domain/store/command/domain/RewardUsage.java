@@ -7,10 +7,20 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 import com.outsider.reward.domain.member.command.domain.Member;
+import com.outsider.reward.domain.store.exception.StoreMissionErrorCode;
+import com.outsider.reward.domain.store.exception.StoreMissionException;
 import com.outsider.reward.domain.tag.command.domain.BaseTimeEntity;
 
 @Entity
-@Table(name = "reward_usages")
+@Table(
+    name = "reward_usages",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_reward_usage_user_mission",
+            columnNames = {"user_id", "store_mission_id"}
+        )
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RewardUsage extends BaseTimeEntity {
@@ -26,6 +36,7 @@ public class RewardUsage extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private Member user;
 
+    @Column(nullable = false)
     private double amount;
     
     @Enumerated(EnumType.STRING)
@@ -48,5 +59,11 @@ public class RewardUsage extends BaseTimeEntity {
 
     public void fail() {
         this.status = RewardUsageStatus.FAILED;
+    }
+
+    public static void   validateUserCanUseReward(Member user, StoreMission mission) {
+        if (mission.hasUserUsedReward(user)) {
+            throw new StoreMissionException(StoreMissionErrorCode.ALREADY_USED_REWARD);
+        }
     }
 } 

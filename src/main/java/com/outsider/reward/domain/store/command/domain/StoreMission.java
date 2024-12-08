@@ -5,8 +5,15 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import com.outsider.reward.domain.finance.command.domain.Account;
+import com.outsider.reward.domain.finance.command.domain.Transaction;
+import com.outsider.reward.domain.finance.command.domain.TransactionType;
+import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.platform.command.domain.Platform;
+import com.outsider.reward.domain.store.exception.StoreMissionErrorCode;
+import com.outsider.reward.domain.store.exception.StoreMissionException;
 import com.outsider.reward.domain.tag.command.domain.Tag;
 
 import java.time.LocalDate;
@@ -94,6 +101,10 @@ public class StoreMission {
 
     @OneToOne(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
     private RewardBudget budget;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "registrant_id")
+    private Member registrant;
 
     @Builder
     public StoreMission(String rewardName, Platform platform, String storeName,
@@ -205,5 +216,33 @@ public class StoreMission {
 
     public double getBudgetUsageRate() {
         return budget != null ? budget.getUsageRate() : 0;
+    }
+
+    public boolean hasUserUsedReward(Member user) {
+        return usages.stream()
+            .anyMatch(usage -> usage.getUser().equals(user) && 
+                     usage.getStatus() != RewardUsageStatus.FAILED);
+    }
+
+    public boolean isExpired() {
+        return LocalDate.now().isAfter(endDate);
+    }
+
+    public double refundRemainingBudget() {
+        if (!isExpired()) {
+            throw new StoreMissionException(StoreMissionErrorCode.MISSION_NOT_EXPIRED);
+        }
+
+        double remainingAmount = budget.getRemainingBudget();
+        if (remainingAmount <= 0) {
+            return 0;
+        }
+
+        budget.setRemainingAmount(0);
+        return remainingAmount;
+    }
+
+    public Member getRegistrant() {
+        return registrant;
     }
 }
