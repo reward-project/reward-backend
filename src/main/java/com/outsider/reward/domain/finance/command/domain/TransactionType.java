@@ -9,5 +9,7 @@ public enum TransactionType {
     REWARD_BUDGET,  // 리워드 예산 설정
     REWARD_REFUND,  // 리워드 예산 환불
     VIRTUAL_CHARGE, // 가상 충전 (테스트용)
-    ADMIN_CHARGE   // 관리자 충전
+    ADMIN_CHARGE,   // 관리자 충전
+    KAKAO_PAY,      // 카카오페이 충전
+    BANK_TRANSFER   // 계좌이체
 } 

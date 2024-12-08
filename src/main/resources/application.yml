@@ -93,3 +93,10 @@ app:
 discord:
   webhook:
     url: https://discord.com/api/webhooks/1314046241222557807/KUbSb5G5jb7p9JAnWsM0FSkpMRT2iloCVyk3Lpe6RnzF8bnP4IQzMn6Ty6Ss60PC88v4
+
+toss:
+  client:
+    api-key: ${TOSS_API_KEY}
+    secret-key: ${TOSS_SECRET_KEY}
+    success-url: http://localhost:8080/api/v1/payments/toss/success
+    fail-url: http://localhost:8080/api/v1/payments/toss/fail

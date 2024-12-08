@@ -5,8 +5,10 @@ import com.outsider.reward.domain.tag.command.domain.BaseTimeEntity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +16,9 @@ import java.util.List;
 @Entity
 @Table(name = "accounts")
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Account extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,14 +37,14 @@ public class Account extends BaseTimeEntity {
     @Column(nullable = false)
     private double pendingAmount;    // 정산 대기 금액
 
-    @Column(nullable = false)
-    private String bankName;         // 은행명
+    @Column(nullable = true)
+    private String bankName;
 
-    @Column(nullable = false)
-    private String accountNumber;    // 계좌번호
+    @Column(nullable = true)
+    private String accountNumber;
 
-    @Column(nullable = false)
-    private String accountHolder;    // 예금주
+    @Column(nullable = true)
+    private String accountHolder;
 
     @Enumerated(EnumType.STRING)
     private AccountStatus status;    // 계좌 상태
@@ -63,5 +67,22 @@ public class Account extends BaseTimeEntity {
     public void addSettlement(Settlement settlement) {
         this.settlements.add(settlement);
         this.pendingAmount -= settlement.getAmount();
+    }
+
+    public void addBalance(double amount, TransactionType type, String description) {
+        this.balance += amount;
+        if (type == TransactionType.KAKAO_PAY) {
+            this.totalEarned += amount;  // 카카오페이 충전도 총 적립금에 포함
+        }
+    }
+
+    public void updateBankInfo(String bankName, String accountNumber, String accountHolder) {
+        this.bankName = bankName;
+        this.accountNumber = accountNumber;
+        this.accountHolder = accountHolder;
+    }
+
+    public boolean hasBankInfo() {
+        return bankName != null && accountNumber != null && accountHolder != null;
     }
 } 

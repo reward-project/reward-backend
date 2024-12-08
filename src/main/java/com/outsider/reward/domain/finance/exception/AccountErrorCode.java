@@ -8,13 +8,15 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum AccountErrorCode implements ErrorCode {
-    ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "ACC001", "error.account.not.found"),
-    INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "ACC002", "error.account.insufficient.balance"),
-    INVALID_TRANSACTION(HttpStatus.BAD_REQUEST, "ACC003", "error.account.invalid.transaction");
+    ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "ACC001"),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "ACC002"),
+    BANK_INFO_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACC003"),
+    BANK_INFO_INVALID(HttpStatus.BAD_REQUEST, "ACC004"),
+    INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "ACC005"),
+    TRANSFER_FAILED(HttpStatus.BAD_REQUEST, "ACC006");
 
     private final HttpStatus httpStatus;
     private final String code;
-    private final String messageKey;
 
     @Override
     public int getStatus() {
@@ -23,7 +25,7 @@ public enum AccountErrorCode implements ErrorCode {
 
     @Override
     public String getMessageKey() {
-        return this.messageKey;
+        return "error." + this.code;
     }
 
     @Override
