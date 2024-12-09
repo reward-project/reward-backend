@@ -2,6 +2,7 @@ package com.outsider.reward.domain.store.command.mapper;
 
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.platform.command.domain.Platform;
+import com.outsider.reward.domain.store.command.domain.RewardBudget;
 import com.outsider.reward.domain.store.command.domain.StoreMission;
 import com.outsider.reward.domain.store.command.dto.CreateStoreMissionRequest;
 import com.outsider.reward.domain.store.command.dto.StoreMissionResponse;
@@ -55,10 +56,34 @@ public interface StoreMissionMapper {
 
     @Mapping(source = "platformId", target = "platform", qualifiedByName = "platformIdToPlatform")
     @Mapping(source = "tags", target = "tags", qualifiedByName = "tagsToTagEntities")
-    StoreMission toEntity(CreateStoreMissionRequest request, 
+    default StoreMission toEntity(CreateStoreMissionRequest request, 
                          @Context PlatformRepository platformRepository, 
                          @Context TagRepository tagRepository,
-                         @Context Member currentMember);
+                         @Context Member registrant) {
+        Platform platform = platformIdToPlatform(request.getPlatformId(), platformRepository);
+        Set<Tag> tags = mapTags(request.getTags(), tagRepository, registrant);
+        
+        StoreMission storeMission = StoreMission.builder()
+            .rewardName(request.getRewardName())
+            .platform(platform)
+            .storeName(request.getStoreName())
+            .registrant(registrant)
+            .productLink(request.getProductLink())
+            .keyword(request.getKeyword())
+            .productId(request.getProductId())
+            .optionId(request.getOptionId())
+            .startDate(request.getStartDate())
+            .endDate(request.getEndDate())
+            .rewardAmount(request.getRewardAmount())
+            .maxRewardsPerDay(request.getMaxRewardsPerDay())
+            .tags(tags)
+            .build();
+
+        // RewardBudget 초기화
+        storeMission.initializeBudget(request.getTotalBudget());
+        
+        return storeMission;
+    }
 
     @Mapping(source = "platform", target = "platform", qualifiedByName = "toPlatformInfo")
     @Mapping(source = "rewardName", target = "reward.rewardName")
@@ -72,8 +97,10 @@ public interface StoreMissionMapper {
     @Mapping(source = "keyword", target = "store.keyword")
     @Mapping(source = "productId", target = "store.productId")
     @Mapping(source = "optionId", target = "store.optionId")
-    @Mapping(source = "registrantId", target = "registrant.registrantId")
-    @Mapping(source = "registrantName", target = "registrant.registrantName")
+    @Mapping(source = "registrant", target = "registrant", qualifiedByName = "toRegistrantInfo")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "recentUsages", ignore = true)
     StoreMissionResponse toResponse(StoreMission storeMission);
 
     @Named("toPlatformInfo")
@@ -113,10 +140,15 @@ public interface StoreMissionMapper {
     }
 
     @Named("toRegistrantInfo")
-    default RegistrantInfo toRegistrantInfo(StoreMission mission) {
+    default RegistrantInfo toRegistrantInfo(Member registrant) {
+        if (registrant == null) return null;
+        Set<String> roles = registrant.getRoleNames();
+        String role = roles.isEmpty() ? "USER" : roles.iterator().next();
         return RegistrantInfo.builder()
-            .registrantId(mission.getRegistrantId())
-            .registrantName(mission.getRegistrantName())
+            .registrantId(registrant.getId())
+            .registrantName(registrant.getName())
+            .registrantEmail(registrant.getEmail())
+            .registrantRole(role)
             .build();
     }
 

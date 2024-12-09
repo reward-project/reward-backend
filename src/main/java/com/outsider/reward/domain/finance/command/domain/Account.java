@@ -2,6 +2,8 @@ package com.outsider.reward.domain.finance.command.domain;
 
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.tag.command.domain.BaseTimeEntity;
+import com.outsider.reward.domain.finance.command.domain.Settlement;
+import com.outsider.reward.domain.finance.command.domain.SettlementStatus;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -55,6 +57,8 @@ public class Account extends BaseTimeEntity {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private List<Settlement> settlements = new ArrayList<>();
 
+    private String bankCode;      // 은행코드
+
     public void addTransaction(Transaction transaction) {
         this.transactions.add(transaction);
         this.balance += transaction.getAmount();
@@ -76,8 +80,8 @@ public class Account extends BaseTimeEntity {
         }
     }
 
-    public void updateBankInfo(String bankName, String accountNumber, String accountHolder) {
-        this.bankName = bankName;
+    public void updateBankInfo(String bankCode, String accountNumber, String accountHolder) {
+        this.bankCode = bankCode;
         this.accountNumber = accountNumber;
         this.accountHolder = accountHolder;
     }

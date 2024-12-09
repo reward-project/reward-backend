@@ -15,5 +15,7 @@ public class StoreMissionQueryDto extends BaseTimeInfo {
     private final StoreInfo store;
     private final RegistrantInfo registrant;
     private final Set<String> tags;
-    private final String status;  // 미션 상태 추가
+    private final String status;
+    private final long totalRewardUsage;  // 총 리워드 사용량
+    private final long remainingRewardBudget;  // 남은 리워드 예산
 }

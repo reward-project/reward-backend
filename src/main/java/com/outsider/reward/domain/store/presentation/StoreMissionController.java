@@ -45,27 +45,35 @@ public class StoreMissionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StoreMissionQueryDto> getStoreMission(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<StoreMissionQueryDto>> getStoreMission(@PathVariable Long id) {
         return queryService.findById(id)
-                .map(ResponseEntity::ok)
+                .map(dto -> ResponseEntity.ok(ApiResponse.success(dto, "스토어 미션을 성공적으로 조회했습니다.")))
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/registrant/{registrantId}")
-    public ResponseEntity<List<StoreMissionQueryDto>> getStoreMissionsByRegistrant(@PathVariable Long registrantId) {
-        List<StoreMissionQueryDto> missions = queryService.findByRegistrantId(registrantId);
-        return ResponseEntity.ok(missions);
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<StoreMissionQueryDto>>> getMyStoreMissions(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            log.debug("Fetching store missions for user: {}", userDetails.getMember().getId());
+            List<StoreMissionQueryDto> missions = queryService.findByRegistrantId(userDetails.getMember().getId());
+            return ResponseEntity.ok(ApiResponse.success(missions, "스토어 미션 목록을 성공적으로 조회했습니다."));
+        } catch (Exception e) {
+            log.error("Error fetching store missions", e);
+            throw e;
+        }
     }
 
     @GetMapping("/reward/{rewardId}")
-    public ResponseEntity<List<StoreMissionQueryDto>> getStoreMissionsByReward(@PathVariable String rewardId) {
+    public ResponseEntity<ApiResponse<List<StoreMissionQueryDto>>> getStoreMissionsByReward(@PathVariable String rewardId) {
         List<StoreMissionQueryDto> missions = queryService.findByRewardId(rewardId);
-        return ResponseEntity.ok(missions);
+        return ResponseEntity.ok(ApiResponse.success(missions, "리워드 ID로 스토어 미션 목록을 성공적으로 조회했습니다."));
     }
 
     @GetMapping("/tags/{tag}")
-    public ResponseEntity<List<StoreMissionQueryDto>> getStoreMissionsByTag(@PathVariable String tag) {
+    public ResponseEntity<ApiResponse<List<StoreMissionQueryDto>>> getStoreMissionsByTag(@PathVariable String tag) {
         List<StoreMissionQueryDto> missions = queryService.findByTag(tag);
-        return ResponseEntity.ok(missions);
+        return ResponseEntity.ok(ApiResponse.success(missions, "태그로 스토어 미션 목록을 성공적으로 조회했습니다."));
     }
 }

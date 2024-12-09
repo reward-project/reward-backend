@@ -28,17 +28,18 @@ public class StoreMissionQueryDaoImpl implements StoreMissionQueryDaoCustom {
         return queryFactory
             .select(Projections.constructor(StoreMissionQueryDto.class,
                 QStoreMission.storeMission.id,
+                QStoreMission.storeMission.rewardId,
                 QStoreMission.storeMission.rewardName,
+                QStoreMission.storeMission.registrant.basicInfo.name.as("registrantName"),
+                QStoreMission.storeMission.registrant.id.as("registrantId"),
                 QStoreMission.storeMission.platform,
                 QStoreMission.storeMission.storeName,
-                QStoreMission.storeMission.registrantName,
                 QStoreMission.storeMission.productLink,
                 QStoreMission.storeMission.keyword,
                 QStoreMission.storeMission.productId,
                 QStoreMission.storeMission.optionId,
                 QStoreMission.storeMission.startDate,
                 QStoreMission.storeMission.endDate,
-                QStoreMission.storeMission.registrantId,
                 QStoreMission.storeMission.rewardAmount,
                 QStoreMission.storeMission.maxRewardsPerDay
             ))

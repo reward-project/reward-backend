@@ -24,9 +24,6 @@ public class CreateStoreMissionRequest {
     @NotBlank(message = "Store name is required")
     private String storeName;
 
-    @NotBlank(message = "Registrant name is required")
-    private String registrantName;
-
     @NotBlank(message = "Product link is required")
     private String productLink;
 
@@ -50,6 +47,9 @@ public class CreateStoreMissionRequest {
 
     @NotNull(message = "Reward amount is required")
     private Double rewardAmount;
+
+    @NotNull(message = "Total budget is required")
+    private Double totalBudget;
 
     @NotNull(message = "Max rewards per day is required")
     private Integer maxRewardsPerDay;

@@ -99,7 +99,7 @@ public class MemberCommandService {
     @Transactional
     public TokenDto refresh(String refreshToken) {
         // 1. 리프레시 토큰 검증
-        RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
+        RefreshToken token = refreshTokenRepository.findById(refreshToken)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
                 
         // 2. 새로운 토큰 쌍 생성
@@ -116,7 +116,7 @@ public class MemberCommandService {
     @Transactional
     public void logout(String refreshToken, String email) {
         // 리프레시 토큰 검증
-        RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
+        RefreshToken token = refreshTokenRepository.findById(refreshToken)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN));
         
         // 토큰의 소유자 검증

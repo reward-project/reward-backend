@@ -28,7 +28,7 @@ public class StoreMissionQueryServiceImpl implements StoreMissionQueryService {
 
     @Override
     public List<StoreMissionQueryDto> findByRegistrantId(Long registrantId) {
-        return storeMissionRepository.findByRegistrantId(registrantId).stream()
+        return storeMissionRepository.findByRegistrantIdWithRewardUsages(registrantId).stream()
                 .map(storeMissionMapper::toDto)
                 .collect(Collectors.toList());
     }

@@ -3,6 +3,7 @@ package com.outsider.reward.global.security.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,7 @@ public class JwtTokenProvider {
     }
 
     public String createRefreshToken(String email) {
+        log.debug("Creating refresh token for email: {}", email);
         Date now = new Date();
         Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
 
@@ -68,7 +70,20 @@ public class JwtTokenProvider {
                 .signWith(key)
                 .compact();
 
-        refreshTokenRepository.save(new RefreshToken(refreshToken, email));
+        log.debug("Generated refresh token: {}", refreshToken.substring(0, Math.min(10, refreshToken.length())) + "...");
+
+        try {
+            refreshTokenRepository.save(new RefreshToken(refreshToken, email));
+            log.debug("Refresh token saved to repository");
+            
+            // 저장 후 바로 조회해서 확인
+            RefreshToken savedToken = refreshTokenRepository.findById(refreshToken)
+                .orElse(null);
+            log.debug("Verification - Saved token found: {}", savedToken);
+        } catch (Exception e) {
+            log.error("Error saving refresh token: ", e);
+            throw e;
+        }
                 
         return refreshToken;
     }
@@ -90,38 +105,65 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String token) {
+        log.info("=== Token Validation Started ===");
         try {
+            log.info("Attempting to parse and validate token: {}", token.substring(0, Math.min(10, token.length())) + "...");
+            
             Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token);
+                
+            log.info("Token validation successful");
             return true;
+        } catch (ExpiredJwtException e) {
+            log.error("Token expired: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
+            log.error("Token validation failed: {}", e.getMessage());
             return false;
+        } finally {
+            log.info("=== Token Validation Completed ===");
         }
     }
 
     public TokenDto refreshAccessToken(String refreshToken) {
-        log.debug("Refresh token process started with token: {}", refreshToken.substring(0, 10) + "...");
+        log.debug("Refresh token process started with token: {}", refreshToken.substring(0, Math.min(10, refreshToken.length())) + "...");
         
-        // 1. 기존 리프레시 토큰 검증
+        // Redis에 저장된 모든 토큰 출력
         try {
+            Iterable<RefreshToken> allTokens = refreshTokenRepository.findAll();
+            log.debug("All tokens in repository:");
+            allTokens.forEach(token -> 
+                log.debug("Token: {}, Email: {}", 
+                    token.getRefreshToken().substring(0, Math.min(10, token.getRefreshToken().length())) + "...", 
+                    token.getEmail())
+            );
+        } catch (Exception e) {
+            log.error("Error listing tokens: ", e);
+        }
+
+        if (refreshToken == null || refreshToken.trim().isEmpty()) {
+            log.error("Refresh token is null or empty");
+            throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        try {
+            // 1. 리프레시 토큰 형식 검증
             if (!validateToken(refreshToken)) {
-                log.error("Refresh token validation failed");
+                log.error("Refresh token validation failed - Invalid token format or expired");
                 throw new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
             }
             
-            String email = getEmailFromToken(refreshToken);
-            log.debug("Email extracted from refresh token: {}", email);
-            
             // 2. DB에서 토큰 확인
-            RefreshToken savedToken = refreshTokenRepository.findByRefreshToken(refreshToken)
+            RefreshToken savedToken = refreshTokenRepository.findById(refreshToken)
                 .orElseThrow(() -> {
-                    log.error("Refresh token not found in repository");
+                    log.error("Refresh token not found in repository: {}", refreshToken.substring(0, Math.min(10, refreshToken.length())) + "...");
                     return new MemberException(MemberErrorCode.INVALID_REFRESH_TOKEN);
                 });
             
-            log.debug("Saved token found for email: {}", savedToken.getEmail());
+            String email = savedToken.getEmail();
+            log.debug("Saved token found for email: {}", email);
             
             // 3. 새로운 토큰 쌍 발급
             String newAccessToken = createToken(email);

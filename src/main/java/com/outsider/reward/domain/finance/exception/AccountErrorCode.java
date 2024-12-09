@@ -13,7 +13,9 @@ public enum AccountErrorCode implements ErrorCode {
     BANK_INFO_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACC003"),
     BANK_INFO_INVALID(HttpStatus.BAD_REQUEST, "ACC004"),
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "ACC005"),
-    TRANSFER_FAILED(HttpStatus.BAD_REQUEST, "ACC006");
+    TRANSFER_FAILED(HttpStatus.BAD_REQUEST, "ACC006"),
+    SETTLEMENT_FAILED(HttpStatus.BAD_REQUEST, "ACC007"),
+    INVALID_SETTLEMENT_AMOUNT(HttpStatus.BAD_REQUEST, "ACC008");
 
     private final HttpStatus httpStatus;
     private final String code;

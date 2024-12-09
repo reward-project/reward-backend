@@ -31,25 +31,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("Request URI: {}", request.getRequestURI());
         log.info("Request Method: {}", request.getMethod());
 
-        // 기존 Access 토큰 처리
         String jwt = resolveToken(request);
         log.info("JWT Token: {}", jwt != null ? "Present" : "Not Present");
         
         if (StringUtils.hasText(jwt)) {
             try {
+                log.info("Validating JWT token...");
                 if (tokenProvider.validateToken(jwt)) {
                     Authentication authentication = tokenProvider.getAuthentication(jwt);
+                    log.info("Authentication object created: {}", authentication);
+                    log.info("Principal type: {}", authentication.getPrincipal().getClass().getName());
+                    log.info("Authorities: {}", authentication.getAuthorities());
+                    
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.info("Authentication set for user: {}", authentication.getName());
+                    log.info("Authentication set in SecurityContext for user: {}", authentication.getName());
                 }
             } catch (ExpiredJwtException e) {
-                log.info("Access Token expired");
+                log.error("Token expired: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            } catch (Exception e) {
+                log.error("Authentication error occurred", e);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
+        } else {
+            log.info("No JWT token found in request");
         }
         
         filterChain.doFilter(request, response);
+        
+        // SecurityContext의 최종 상태 확인
+        Authentication finalAuth = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Final Authentication state: {}", finalAuth != null ? 
+            "Present for user: " + finalAuth.getName() : "Not present");
+        
         log.info("=== JWT Filter Completed ===\n");
     }
 

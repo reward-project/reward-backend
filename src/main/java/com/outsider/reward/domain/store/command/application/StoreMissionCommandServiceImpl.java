@@ -30,10 +30,10 @@ public class StoreMissionCommandServiceImpl implements StoreMissionCommandServic
     @Override
     @Transactional
     public StoreMissionResponse createStoreMission(CreateStoreMissionRequest request) {
-        Member currentMember = memberRepository.findById(request.getRegistrantId())
+        Member registrant = memberRepository.findById(request.getRegistrantId())
             .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
         
-        StoreMission storeMission = storeMissionMapper.toEntity(request, platformRepository, tagRepository, currentMember);
+        StoreMission storeMission = storeMissionMapper.toEntity(request, platformRepository, tagRepository, registrant);
         storeMissionDomainService.validateStoreMission(storeMission);
         StoreMission savedMission = storeMissionRepository.save(storeMission);
         return storeMissionMapper.toResponse(savedMission);

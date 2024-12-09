@@ -10,9 +10,13 @@ import java.util.Optional;
 
 @Repository
 public interface StoreMissionRepository extends JpaRepository<StoreMission, Long> {
-    List<StoreMission> findByRegistrantId(Long registrantId);
+    @Query("SELECT sm FROM StoreMission sm " +
+           "LEFT JOIN FETCH sm.rewardUsages " +
+           "WHERE sm.registrant.id = :registrantId")
+    List<StoreMission> findByRegistrantIdWithRewardUsages(@Param("registrantId") Long registrantId);
+
     List<StoreMission> findByRewardId(String rewardId);
-    Optional<StoreMission> findByIdAndRegistrantId(Long id, Long registrantId);
+    Optional<StoreMission> findByIdAndRegistrant_Id(Long id, Long registrantId);
 
     @Query("SELECT sm FROM StoreMission sm JOIN sm.tags t WHERE t.name = :tagName")
     List<StoreMission> findByTagName(@Param("tagName") String tagName);

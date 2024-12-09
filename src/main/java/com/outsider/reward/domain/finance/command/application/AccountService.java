@@ -86,4 +86,9 @@ public class AccountService {
         // 테스트를 위해 항상 true 반환
         return true;
     }
+
+    public Account getAccount(Long userId) {
+        return accountRepository.findByMemberId(userId)
+            .orElseThrow(() -> new AccountException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+    }
 } 

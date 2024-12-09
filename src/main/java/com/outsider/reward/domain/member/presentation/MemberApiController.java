@@ -6,6 +6,8 @@ import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.dto.MemberCommand;
 import com.outsider.reward.domain.member.command.dto.TokenDto;
 import com.outsider.reward.domain.member.command.dto.TokenRefreshRequest;
+import com.outsider.reward.domain.member.exception.MemberErrorCode;
+import com.outsider.reward.domain.member.exception.MemberException;
 import com.outsider.reward.domain.member.mapper.MemberMapper;
 import com.outsider.reward.domain.member.command.dto.GoogleCallbackRequest;
 import com.outsider.reward.domain.member.query.application.MemberQueryService;
@@ -170,6 +172,10 @@ public class MemberApiController {
     
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberResponse>> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+        
         Member member = memberQueryService.getMemberByEmail(userDetails.getUsername());
         MemberResponse response = memberMapper.toResponse(member);
         return ResponseEntity.ok(ApiResponse.success(response));

@@ -16,8 +16,8 @@ import java.util.List;
 @Repository
 public interface StoreMissionQueryDao extends JpaRepository<StoreMission, Long>, StoreMissionQueryDaoCustom {
     
-    @Query("SELECT sm FROM StoreMission sm WHERE sm.registrantId = :registrantId")
-    List<StoreMission> findAllByRegistrantId(@Param("registrantId") String registrantId);
+    @Query("SELECT sm FROM StoreMission sm WHERE sm.registrant.id = :registrantId")
+    List<StoreMission> findAllByRegistrantId(@Param("registrantId") Long registrantId);
     
     @Query("SELECT sm FROM StoreMission sm WHERE sm.rewardId = :rewardId")
     List<StoreMission> findAllByRewardId(@Param("rewardId") String rewardId);
@@ -25,6 +25,6 @@ public interface StoreMissionQueryDao extends JpaRepository<StoreMission, Long>,
     @Query("SELECT sm FROM StoreMission sm WHERE sm.startDate <= :date AND sm.endDate >= :date")
     List<StoreMission> findAllActiveMissions(@Param("date") LocalDate date);
     
-    @Query("SELECT sm FROM StoreMission sm WHERE sm.registrantId = :registrantId AND sm.startDate <= :date AND sm.endDate >= :date")
-    List<StoreMission> findActiveRegistrantMissions(@Param("registrantId") String registrantId, @Param("date") LocalDate date);
+    @Query("SELECT sm FROM StoreMission sm WHERE sm.registrant.id = :registrantId AND sm.startDate <= :date AND sm.endDate >= :date")
+    List<StoreMission> findActiveRegistrantMissions(@Param("registrantId") Long registrantId, @Param("date") LocalDate date);
 }

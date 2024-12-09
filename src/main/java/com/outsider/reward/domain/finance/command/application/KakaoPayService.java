@@ -104,4 +104,11 @@ public class KakaoPayService implements PaymentService {
             KakaoPayApproveResponse.class
         );
     }
+
+    public void processPaymentSuccess(String pgToken, String orderId) {
+        // 카카오페이 결제 승인 처리
+        // 1. 카카오페이 승인 요청
+        // 2. 결제 정보 업데이트
+        // 3. 계좌 잔액 업데이트
+    }
 } 

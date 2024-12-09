@@ -39,56 +39,54 @@ public class StoreMission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "registrant_id", nullable = false)
+    private Member registrant;
+
+    @Column(name = "reward_id", unique = true, nullable = false)
+    private String rewardId;
+
+    @Column(name = "reward_name", nullable = false)
     private String rewardName;
+
+    @Column(name = "reward_amount", nullable = false)
+    private Double rewardAmount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "platform_id", nullable = false)
     private Platform platform;
 
-    @Column(nullable = false)
+    @Column(name = "store_name", nullable = false)
     private String storeName;
 
-    @Column(nullable = false)
-    private String registrantName;
-
-    @Column(nullable = false)
+    @Column(name = "product_link", nullable = false)
     private String productLink;
 
-    @Column(nullable = false)
+    @Column(name = "keyword", nullable = false)
     private String keyword;
 
-    @Column(nullable = false)
+    @Column(name = "product_id", nullable = false)
     private String productId;
 
-    @Column(nullable = false)
+    @Column(name = "option_id", nullable = false)
     private String optionId;
 
-    @Column(nullable = false)
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(nullable = false)
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false)
-    private Long registrantId;
+    @OneToOne(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RewardBudget budget;
 
-    @Column(nullable = false)
-    private String rewardId;
+    @Column(name = "max_rewards_per_day", nullable = false)
+    private int maxRewardsPerDay;
 
-    @Column(nullable = false)
-    private Double rewardAmount;
+    @OneToMany(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RewardUsage> rewardUsages = new HashSet<>();
 
-    @Column(nullable = false)
-    private Integer maxRewardsPerDay;
-
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
     @JoinTable(
         name = "store_mission_tags",
         joinColumns = @JoinColumn(name = "store_mission_id"),
@@ -96,36 +94,24 @@ public class StoreMission {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    @OneToMany(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RewardUsage> usages = new ArrayList<>();
-
-    @OneToOne(mappedBy = "storeMission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private RewardBudget budget;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "registrant_id")
-    private Member registrant;
-
     @Builder
-    public StoreMission(String rewardName, Platform platform, String storeName,
-                       String registrantName, String productLink, String keyword,
-                       String productId, String optionId, LocalDate startDate,
-                       LocalDate endDate, String registrantId, Double rewardAmount,
-                       Integer maxRewardsPerDay, Set<Tag> tags) {
+    public StoreMission(String rewardName, Platform platform, String storeName, Member registrant,
+                       String productLink, String keyword, String productId, String optionId,
+                       LocalDate startDate, LocalDate endDate, Double rewardAmount, int maxRewardsPerDay,
+                       Set<Tag> tags) {
+        this.rewardId = UUID.randomUUID().toString();
         this.rewardName = rewardName;
         this.platform = platform;
         this.storeName = storeName;
-        this.registrantName = registrantName;
+        this.registrant = registrant;
         this.productLink = productLink;
         this.keyword = keyword;
         this.productId = productId;
         this.optionId = optionId;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.registrantId = Long.parseLong(registrantId);
         this.rewardAmount = rewardAmount;
         this.maxRewardsPerDay = maxRewardsPerDay;
-        this.rewardId = UUID.randomUUID().toString();
         this.tags = tags != null ? tags : new HashSet<>();
     }
 
@@ -155,28 +141,28 @@ public class StoreMission {
     }
 
     public int getTotalUsageCount() {
-        return usages.size();
+        return rewardUsages.size();
     }
 
     public int getTodayUsageCount() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
-        return (int) usages.stream()
+        return (int) rewardUsages.stream()
             .filter(usage -> usage.getUsedAt().isAfter(startOfDay) && 
                            usage.getUsedAt().isBefore(endOfDay))
             .count();
     }
 
     public double getUsageRate() {
-        if (usages.isEmpty()) return 0.0;
-        long completedCount = usages.stream()
+        if (rewardUsages.isEmpty()) return 0.0;
+        long completedCount = rewardUsages.stream()
             .filter(usage -> usage.getStatus() == RewardUsageStatus.COMPLETED)
             .count();
-        return (double) completedCount / usages.size() * 100;
+        return (double) completedCount / rewardUsages.size() * 100;
     }
 
     public Map<Integer, Integer> getUsageByHour() {
-        return usages.stream()
+        return rewardUsages.stream()
             .collect(Collectors.groupingBy(
                 usage -> usage.getUsedAt().getHour(),
                 Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
@@ -184,7 +170,7 @@ public class StoreMission {
     }
 
     public Map<String, Integer> getUsageByDay() {
-        return usages.stream()
+        return rewardUsages.stream()
             .collect(Collectors.groupingBy(
                 usage -> usage.getUsedAt().getDayOfWeek().toString(),
                 Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
@@ -219,9 +205,9 @@ public class StoreMission {
     }
 
     public boolean hasUserUsedReward(Member user) {
-        return usages.stream()
+        return rewardUsages.stream()
             .anyMatch(usage -> usage.getUser().equals(user) && 
-                     usage.getStatus() != RewardUsageStatus.FAILED);
+                     usage.getStatus() == RewardUsageStatus.COMPLETED);
     }
 
     public boolean isExpired() {
@@ -244,5 +230,12 @@ public class StoreMission {
 
     public Member getRegistrant() {
         return registrant;
+    }
+
+    public long getTotalRewardUsage() {
+        return rewardUsages.stream()
+            .filter(usage -> usage.getStatus() == RewardUsageStatus.COMPLETED)
+            .mapToLong(usage -> (long) usage.getAmount())
+            .sum();
     }
 }
