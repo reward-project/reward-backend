@@ -29,7 +29,13 @@ public enum StoreMissionErrorCode implements ErrorCode {
     MISSION_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "SM016", "error.store.mission.not.active"),
     BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST, "SM017", "error.store.mission.budget.exceeded"),
     DAILY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "SM018", "error.store.mission.daily.limit.exceeded"),
-    STORE_MISSION_BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST, "SM019", "error.store.mission.budget.or.daily.limit.exceeded");
+    STORE_MISSION_BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST, "SM019", "error.store.mission.budget.or.daily.limit.exceeded"),
+    PAST_START_DATE(HttpStatus.BAD_REQUEST, "SM020", "error.store.mission.past.start.date"),
+    INVALID_PRODUCT_LINK(HttpStatus.BAD_REQUEST, "SM021", "error.store.mission.invalid.product.link"),
+    STORE_MISSION_NOT_FOUND2(HttpStatus.NOT_FOUND, "SM022", "error.store.mission.not.found"),
+    MISSION_ALREADY_COMPLETED2(HttpStatus.BAD_REQUEST, "SM023", "error.store.mission.already.completed"),
+    INVALID_MISSION_ANSWER2(HttpStatus.BAD_REQUEST, "SM024", "error.store.mission.wrong.answer"),
+    STORE_MISSION_BUDGET_EXCEEDED2(HttpStatus.BAD_REQUEST, "SM025", "error.store.mission.budget.or.daily.limit.exceeded");
 
     private final HttpStatus httpStatus;
     private final String code;

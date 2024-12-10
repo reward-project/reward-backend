@@ -49,8 +49,7 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final GetOrFullAuthorizationManager getOrFullAuthorizationManager;
     private final ClientRegistrationRepository clientRegistrationRepository;
-    private final GoogleOAuth2UserService googleOAuth2UserService;
-    private final KakaoOAuth2UserService kakaoOAuth2UserService;
+ 
 
     private String[] permittedEndpoints() {
         return new String[] {
@@ -70,14 +69,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, GoogleOAuth2UserService googleOAuth2UserService, KakaoOAuth2UserService kakaoOAuth2UserService) throws Exception {
         log.debug("Configuring SecurityFilterChain");
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
-            .sessionManagement(sessionManagement -> 
-            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
                 .requestMatchers(permittedEndpoints()).permitAll()
                 .requestMatchers("/**").access(getOrFullAuthorizationManager)
                 .anyRequest().authenticated()
@@ -114,8 +112,9 @@ public class SecurityConfig {
             
         return http.build();
     }
+
     @Bean
-public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
         ClientRegistrationRepository clientRegistrationRepository) {
     DefaultOAuth2AuthorizationRequestResolver defaultResolver =
         new DefaultOAuth2AuthorizationRequestResolver(
@@ -175,4 +174,5 @@ public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
         return new SecurityContextHolder();
     }
 
+    
 } 

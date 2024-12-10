@@ -52,9 +52,11 @@ public class Account extends BaseTimeEntity {
     private AccountStatus status;    // 계좌 상태
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Transaction> transactions = new ArrayList<>();
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Settlement> settlements = new ArrayList<>();
 
     private String bankCode;      // 은행코드

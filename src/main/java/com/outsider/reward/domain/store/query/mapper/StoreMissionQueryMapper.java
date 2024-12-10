@@ -42,6 +42,7 @@ public interface StoreMissionQueryMapper {
     @Mapping(target = "rewardPoint", source = "rewardAmount")
     @Mapping(target = "status", expression = "java(mission.isExpired() ? \"ENDED\" : (java.time.LocalDate.now().isBefore(mission.getStartDate()) ? \"SCHEDULED\" : \"ACTIVE\"))")
     @Mapping(target = "missionUrl", source = "productLink")
+    @Mapping(target = "completed", constant = "false")
     StoreMissionQueryResponse toResponse(StoreMission mission);
 
     default StoreMissionQueryResponse toResponse(StoreMission mission, boolean completed) {

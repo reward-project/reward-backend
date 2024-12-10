@@ -33,14 +33,12 @@ public interface StoreMissionRepository extends JpaRepository<StoreMission, Long
 
     @Query("SELECT DISTINCT sm FROM StoreMission sm " +
            "LEFT JOIN FETCH sm.tags " +
-           "WHERE sm.status = 'ACTIVE' " +
-           "AND (sm.startDate IS NULL OR sm.startDate <= :date) " +
+           "WHERE (sm.startDate IS NULL OR sm.startDate <= :date) " +
            "AND (sm.endDate IS NULL OR sm.endDate >= :date)")
     Page<StoreMission> findAllActiveMissionsWithTags(@Param("date") LocalDate date, Pageable pageable);
 
     @Query("SELECT COUNT(sm) FROM StoreMission sm " +
-           "WHERE sm.status = 'ACTIVE' " +
-           "AND (sm.startDate IS NULL OR sm.startDate <= :date) " +
+           "WHERE (sm.startDate IS NULL OR sm.startDate <= :date) " +
            "AND (sm.endDate IS NULL OR sm.endDate >= :date)")
     long countActiveMissions(@Param("date") LocalDate date);
 }

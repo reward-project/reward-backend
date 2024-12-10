@@ -5,6 +5,7 @@ import com.outsider.reward.domain.store.query.dto.RewardInfo;
 import com.outsider.reward.domain.store.query.dto.StoreInfo;
 import com.outsider.reward.domain.store.query.dto.RegistrantInfo;
 import com.outsider.reward.domain.store.query.dto.common.BaseTimeInfo;
+
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
