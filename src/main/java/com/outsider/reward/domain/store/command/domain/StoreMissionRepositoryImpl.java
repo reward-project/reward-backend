@@ -45,10 +45,14 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
             .on(completion.mission.eq(mission)
                 .and(completion.userId.eq(userId)))
             .leftJoin(mission.budget)
+            .leftJoin(usage)
+            .on(usage.storeMission.eq(mission)
+                .and(usage.user.id.eq(userId)))
             .where(
                 isWithinDateRange(mission, date),
                 hasRemainingBudget(mission),
-                hasRemainingDailyRewards(mission, usage, date)
+                hasRemainingDailyRewards(mission, usage, date),
+                usage.isNull().or(usage.status.ne(RewardUsageStatus.COMPLETED))  // 성공한 미션은 제외
             );
 
         // 페이징 적용
@@ -69,10 +73,14 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
         JPQLQuery<Long> countQuery = queryFactory
             .select(mission.count())
             .from(mission)
+            .leftJoin(usage)
+            .on(usage.storeMission.eq(mission)
+                .and(usage.user.id.eq(userId)))
             .where(
                 isWithinDateRange(mission, date),
                 hasRemainingBudget(mission),
-                hasRemainingDailyRewards(mission, usage, date)
+                hasRemainingDailyRewards(mission, usage, date),
+                usage.isNull().or(usage.status.ne(RewardUsageStatus.COMPLETED))  // 성공한 미션은 제외
             );
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);

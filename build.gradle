@@ -1,110 +1,111 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.3'
-	id 'io.spring.dependency-management' version '1.1.6'
+    id 'java'
+    id 'org.springframework.boot' version '3.2.3'
+    id 'io.spring.dependency-management' version '1.1.6'
 }
 
 group = 'com.outsider'
 version = '0.0.1-SNAPSHOT'
 
 wrapper {
-	gradleVersion = '8.5'
-	distributionType = 'bin'
+    gradleVersion = '8.5'
+    distributionType = 'bin'
 }
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 ext {
-	springBootVersion = '3.2.3'
-	springCloudVersion = '2.2.6.RELEASE'
-	lombokVersion = '1.18.30'
-	mapstructVersion = '1.5.5.Final'
-	jjwtVersion = '0.11.5'
-	minioVersion = '8.5.2'
-	awsSdkVersion = '2.20.56'
-	googleApiClientVersion = '2.2.0'
-	googleOAuthClientVersion = '1.34.1'
-	googleHttpClientVersion = '1.43.3'
-	springDocVersion = '2.3.0'
+    springBootVersion = '3.2.3'
+    springCloudVersion = '2.2.6.RELEASE'
+    lombokVersion = '1.18.30'
+    mapstructVersion = '1.5.5.Final'
+    jjwtVersion = '0.11.5'
+    minioVersion = '8.5.2'
+    awsSdkVersion = '2.20.56'
+    googleApiClientVersion = '2.2.0'
+    googleOAuthClientVersion = '1.34.1'
+    googleHttpClientVersion = '1.43.3'
+    springDocVersion = '2.3.0'
+    querydslVersion = '5.0.0'
+    springSecurityVersion = '6.2.1'
 }
 
 dependencies {
-	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-oauth2-client:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
-	compileOnly "org.projectlombok:lombok:${lombokVersion}"
-	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-	developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-	testImplementation "org.springframework.security:spring-security-test:${springBootVersion}"
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	implementation "io.minio:minio:${minioVersion}"
-	implementation "org.springframework.cloud:spring-cloud-starter-aws:${springCloudVersion}"
-	implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
-	implementation 'software.amazon.awssdk:s3'
-	implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
-	implementation "com.google.api-client:google-api-client:${googleApiClientVersion}"
-	implementation "com.google.oauth-client:google-oauth-client:${googleOAuthClientVersion}"
-	implementation "com.google.http-client:google-http-client-gson:${googleHttpClientVersion}"
-	// MapStruct
-	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
-	annotationProcessor "org.projectlombok:lombok-mapstruct-binding:0.2.0"
-	testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
-	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
-
-	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
-    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
-    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
-
-	implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+    implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-client:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    annotationProcessor "org.projectlombok:lombok-mapstruct-binding:0.2.0"
+    testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    
+    // QueryDSL
+    implementation "com.querydsl:querydsl-jpa:${querydslVersion}:jakarta"
+    annotationProcessor(
+        "com.querydsl:querydsl-apt:${querydslVersion}:jakarta",
+        "jakarta.annotation:jakarta.annotation-api",
+        "jakarta.persistence:jakarta.persistence-api"
+    )
+    
+    developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.springframework.security:spring-security-test:${springSecurityVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation "io.minio:minio:${minioVersion}"
+    implementation "org.springframework.cloud:spring-cloud-starter-aws:${springCloudVersion}"
+    implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
+    implementation 'software.amazon.awssdk:s3'
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+    implementation "com.google.api-client:google-api-client:${googleApiClientVersion}"
+    implementation "com.google.oauth-client:google-oauth-client:${googleOAuthClientVersion}"
+    implementation "com.google.http-client:google-http-client-gson:${googleHttpClientVersion}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
-}
-def generatedSourcesDir = 'src/main/generated'
+def generatedSourcesDir = "$buildDir/generated"
 
 tasks.withType(JavaCompile) {
-    options.generatedSourceOutputDirectory = file(generatedSourcesDir)
+    options.compilerArgs += [
+        '-Amapstruct.defaultComponentModel=spring'
+    ]
+    options.annotationProcessorGeneratedSourcesDirectory = file(generatedSourcesDir)
 }
 
 clean {
     delete file(generatedSourcesDir)
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs = [
-                'src/main/java',
-                generatedSourcesDir
-            ]
-        }
-    }
+tasks.named('test') {
+    useJUnitPlatform()
 }

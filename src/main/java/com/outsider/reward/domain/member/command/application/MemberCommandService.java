@@ -177,7 +177,12 @@ public class MemberCommandService {
     @Transactional
     public Member createOAuthMember(String email, String name, String provider, String platform, String role) {
         Member member = Member.createOAuthMember(email, name, name, provider);
-        member.addRole(RoleType.valueOf(role.toUpperCase()));
+        RoleType roleType = switch (role.toLowerCase()) {
+            case "business" -> RoleType.ROLE_BUSINESS;
+            case "admin" -> RoleType.ROLE_ADMIN;
+            default -> RoleType.ROLE_USER;
+        };
+        member.addRole(roleType);
         member = memberRepository.save(member);
         accountService.createAccount(member.getId());
         return member;

@@ -18,7 +18,7 @@ public class MissionCompletionController {
 
     private final MissionCompletionService missionCompletionService;
 
-    @PostMapping("/missions/{id}/complete")
+    @PostMapping("/store-missions/{id}/complete")
     public ResponseEntity<ApiResponse<MissionCompleteResponse>> completeMission(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id,
