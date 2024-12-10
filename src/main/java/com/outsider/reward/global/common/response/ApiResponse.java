@@ -1,5 +1,6 @@
 package com.outsider.reward.global.common.response;
 
+import org.springframework.data.domain.Page;
 import lombok.Getter;
 
 @Getter
@@ -25,4 +26,8 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> error(T data, String message) {
         return new ApiResponse<>(data, message, false);
     }
-} 
+
+    public static <T> ApiResponse<T> ok(T data) {
+        return success(data);
+    }
+}

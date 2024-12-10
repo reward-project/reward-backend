@@ -52,4 +52,7 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+    public Long getId() {
+        return member.getId();
+    }
 } 

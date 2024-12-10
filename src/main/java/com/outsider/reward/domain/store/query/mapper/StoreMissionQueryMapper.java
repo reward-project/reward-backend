@@ -4,6 +4,7 @@ import com.outsider.reward.domain.store.command.domain.RewardUsage;
 import com.outsider.reward.domain.store.command.domain.RewardUsageStatus;
 import com.outsider.reward.domain.store.command.domain.StoreMission;
 import com.outsider.reward.domain.store.query.dto.StoreMissionQueryDto;
+import com.outsider.reward.domain.store.query.dto.StoreMissionQueryResponse;
 import com.outsider.reward.domain.store.query.dto.PlatformInfo;
 import com.outsider.reward.domain.store.query.dto.RewardInfo;
 import com.outsider.reward.domain.store.query.dto.StoreInfo;
@@ -34,6 +35,21 @@ public interface StoreMissionQueryMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     StoreMissionQueryDto toDto(StoreMission storeMission);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "title", source = "rewardName")
+    @Mapping(target = "description", source = "keyword")
+    @Mapping(target = "rewardPoint", source = "rewardAmount")
+    @Mapping(target = "status", expression = "java(mission.isExpired() ? \"ENDED\" : (java.time.LocalDate.now().isBefore(mission.getStartDate()) ? \"SCHEDULED\" : \"ACTIVE\"))")
+    @Mapping(target = "missionUrl", source = "productLink")
+    StoreMissionQueryResponse toResponse(StoreMission mission);
+
+    default StoreMissionQueryResponse toResponse(StoreMission mission, boolean completed) {
+        StoreMissionQueryResponse response = toResponse(mission);
+        return response.toBuilder()
+            .completed(completed)
+            .build();
+    }
 
     @Named("tagsToStrings")
     default Set<String> tagsToStrings(Set<Tag> tags) {

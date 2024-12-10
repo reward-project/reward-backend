@@ -80,6 +80,15 @@ public class Account extends BaseTimeEntity {
         }
     }
 
+    public void addBalance(double amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+        this.balance += amount;
+        this.totalEarned += amount;
+        this.pendingAmount += amount;
+    }
+
     public void updateBankInfo(String bankCode, String accountNumber, String accountHolder) {
         this.bankCode = bankCode;
         this.accountNumber = accountNumber;

@@ -238,4 +238,49 @@ public class StoreMission {
             .mapToLong(usage -> (long) usage.getAmount())
             .sum();
     }
+
+    public MissionStatus getStatus() {
+        LocalDate now = LocalDate.now();
+        
+        // 시작일 이전
+        if (now.isBefore(startDate)) {
+            return MissionStatus.SCHEDULED;
+        }
+        
+        // 종료일 이후
+        if (now.isAfter(endDate)) {
+            return MissionStatus.EXPIRED;
+        }
+        
+        // 오늘 최대 리워드 도달 여부 확인
+        if (getTodayUsageCount() >= maxRewardsPerDay) {
+            return MissionStatus.DAILY_LIMIT_REACHED;
+        }
+        
+        // 총 예산 소진 여부 확인
+        if (budget != null && budget.isExhausted()) {
+            return MissionStatus.BUDGET_EXHAUSTED;
+        }
+        
+        return MissionStatus.ACTIVE;
+    }
+
+    public boolean isActive() {
+        return getStatus() == MissionStatus.ACTIVE;
+    }
+
+    public boolean canParticipate() {
+        MissionStatus currentStatus = getStatus();
+        return currentStatus == MissionStatus.ACTIVE;
+    }
+
+    public boolean validateAnswer(String answer) {
+        // 답변이 null이거나 빈 문자열인 경우
+        if (answer == null || answer.trim().isEmpty()) {
+            return false;
+        }
+        
+        // 정답(productId)과 사용자의 답변이 일치하는지 확인
+        return this.productId.equals(answer.trim());
+    }
 }

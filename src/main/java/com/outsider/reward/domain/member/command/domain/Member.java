@@ -47,6 +47,25 @@ public class Member {
         return member;
     }
 
+    public static Member createOAuthMember(String email, String name, String nickname, String provider) {
+        Member member = new Member();
+        member.basicInfo = new MemberBasicInfo(email, name, nickname, null);  // OAuth 사용자는 password 불필요
+        member.emailVerified = true;  // OAuth로 가입한 사용자는 이메일이 이미 인증됨
+        member.createdAt = LocalDateTime.now();
+        member.oAuthProviders = new ArrayList<>();
+        member.roles = new HashSet<>();
+
+        // OAuth provider 추가
+        OAuthProvider oAuthProvider = OAuthProvider.builder()
+            .member(member)
+            .provider(provider)
+            .providerId(email)  // providerId를 email로 사용
+            .build();
+        member.addOAuthProvider(oAuthProvider);
+
+        return member;
+    }
+
     public void addOAuthProvider(OAuthProvider provider) {
         this.oAuthProviders.add(provider);
     }

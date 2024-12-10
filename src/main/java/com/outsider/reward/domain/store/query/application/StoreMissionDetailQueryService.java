@@ -1,18 +1,14 @@
 package com.outsider.reward.domain.store.query.application;
 
 import com.outsider.reward.domain.store.query.dto.StoreMissionQueryDto;
-import com.outsider.reward.domain.store.query.dto.StoreMissionQueryResponse;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
-
-
 @Service
-public interface StoreMissionQueryService {
+public interface StoreMissionDetailQueryService {
     Optional<StoreMissionQueryDto> findById(Long id);
     List<StoreMissionQueryDto> findByRegistrantId(Long registrantId);
     List<StoreMissionQueryDto> findByRewardId(String rewardId);
-    List<StoreMissionQueryDto> findByTag(String tag);
 }

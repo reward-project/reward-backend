@@ -49,12 +49,12 @@ public class RewardUsage extends BaseTimeEntity {
         this.storeMission = storeMission;
         this.user = user;
         this.amount = amount;
-        this.status = RewardUsageStatus.PENDING;
-        this.usedAt = LocalDateTime.now();
+        this.status = RewardUsageStatus.PENDING;  // 초기 상태는 PENDING
     }
 
     public void complete() {
         this.status = RewardUsageStatus.COMPLETED;
+        this.usedAt = LocalDateTime.now();
     }
 
     public void fail() {

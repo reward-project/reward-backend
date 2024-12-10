@@ -2,6 +2,9 @@ package com.outsider.reward.domain.member.command.application;
 
 import com.outsider.reward.domain.member.exception.MemberException;
 import com.outsider.reward.domain.member.exception.MemberErrorCode;
+import com.outsider.reward.domain.finance.command.application.AccountService;
+import com.outsider.reward.domain.finance.command.domain.Account;
+import com.outsider.reward.domain.finance.command.domain.AccountRepository;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.command.domain.OAuthProvider;
@@ -26,7 +29,9 @@ import java.util.Optional;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 
-
+/**
+ * 회원가입, 로그인, 회원 정보 수정, 회원 탈퇴 등 회원 관련 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -40,6 +45,7 @@ public class MemberCommandService {
     private final FileUploadService fileUploadService;
     private final RedisTemplate<String, String> redisTemplate;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
+    private final AccountService accountService;
     
     @Transactional
     public Long signUp(MemberCommand.SignUp command, RoleType roleType) {
@@ -62,7 +68,9 @@ public class MemberCommandService {
         }
         
         // 새 회원 생성
-        return createNewMember(command, roleType);
+        Long memberId = createNewMember(command, roleType);
+        accountService.createAccount(memberId);
+        return memberId;
     }
 
     @Transactional
@@ -167,25 +175,12 @@ public class MemberCommandService {
     }
 
     @Transactional
-    public Member createOAuthMember(String email, String name, String provider, String providerId, RoleType roleType) {
-        Member member = Member.createMember(
-            email,
-            name,
-            name,  // nickname
-            ""     // password
-        );
-        
-        OAuthProvider oAuthProvider = OAuthProvider.builder()
-            .member(member)
-            .provider(provider)
-            .providerId(providerId)
-            .build();
-        
-        member.addOAuthProvider(oAuthProvider);
-        member.verifyEmail();
-        member.addRole(roleType);  // Role 대신 RoleType 직접 사용
-        
-        return memberRepository.save(member);
+    public Member createOAuthMember(String email, String name, String provider, String platform, String role) {
+        Member member = Member.createOAuthMember(email, name, name, provider);
+        member.addRole(RoleType.valueOf(role.toUpperCase()));
+        member = memberRepository.save(member);
+        accountService.createAccount(member.getId());
+        return member;
     }
 
     @Transactional
@@ -230,7 +225,7 @@ public class MemberCommandService {
                     name, 
                     "google", 
                     payload.getSubject(),
-                    roleType  // 전달받은 role 사용
+                    role  // 전달받은 role 사용
                 ));
 
             // 토큰 생성
@@ -285,4 +280,4 @@ public class MemberCommandService {
         
         return memberRepository.save(member).getId();
     }
-} 
+}

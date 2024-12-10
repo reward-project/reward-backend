@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.outsider.reward.domain.member.command.application.MemberCommandService;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.global.security.oauth.CustomOAuth2User;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class OAuth2UserService extends DefaultOAuth2UserService {
     
     protected final MemberRepository memberRepository;
+    protected final MemberCommandService memberCommandService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -64,14 +66,12 @@ public abstract class OAuth2UserService extends DefaultOAuth2UserService {
         log.info("Creating new OAuth2 Member - Provider: {}, Platform: {}, Role: {}, Email: {}", 
             provider, platform, role, userInfo.getEmail());
             
-        Member member = Member.createMember(
+        return memberCommandService.createOAuthMember(
             userInfo.getEmail(),
             userInfo.getName(),
-            userInfo.getName(),  // nickname을 name으로 설정
-            null  // OAuth 사용자는 password 불필요
+            provider,
+            platform,
+            role
         );
-        
-        // 생성한 Member를 저장
-        return memberRepository.save(member);
     }
 } 
