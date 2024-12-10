@@ -175,7 +175,6 @@ public class JwtTokenProvider {
             
             // 4. 기존 토큰 삭제 및 새 토큰 저장
             refreshTokenRepository.deleteById(refreshToken);
-            refreshTokenRepository.save(new RefreshToken(newRefreshToken, email));
             
             log.debug("Token refresh completed successfully");
             

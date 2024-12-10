@@ -105,3 +105,15 @@ toss:
     secret-key: ${TOSS_SECRET_KEY}
     success-url: http://localhost:8080/api/v1/payments/toss/success
     fail-url: http://localhost:8080/api/v1/payments/toss/fail
+
+naverpay:
+  client:
+    id: ${NAVER_PAY_CLIENT_ID}
+    secret: ${NAVER_PAY_CLIENT_SECRET}
+  chain.id: ${NAVER_PAY_CHAIN_ID}
+  merchant-id: ${NAVER_PAY_MERCHANT_ID}
+  api:
+    url: ${NAVER_PAY_API_URL:https://dev.apis.naver.com}
+  success-url: ${NAVER_PAY_SUCCESS_URL:http://localhost:8080/api/v1/payments/naver/success}
+  fail-url: ${NAVER_PAY_FAIL_URL:http://localhost:8080/api/v1/payments/naver/fail}
+  cancel-url: ${NAVER_PAY_CANCEL_URL:http://localhost:8080/api/v1/payments/naver/cancel}

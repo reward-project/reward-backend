@@ -30,6 +30,8 @@ app:
     domain: ${DOMAIN}
     secure: true
     same-site: Lax
+  backend:
+    url: https://${BACKEND_DOMAIN}
 
 minio:
   url: ${MINIO_URL}
@@ -50,3 +52,10 @@ server:
     key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: PKCS12
     key-alias: ${SSL_KEY_ALIAS}
+
+naverpay:
+  api:
+    url: https://apis.naver.com/naverpay-partner/naverpay/payments/v2.2
+  success-url: https://${BACKEND_DOMAIN}/api/v1/payments/naver/success
+  fail-url: https://${BACKEND_DOMAIN}/api/v1/payments/naver/fail
+  cancel-url: https://${BACKEND_DOMAIN}/api/v1/payments/naver/cancel

@@ -11,5 +11,6 @@ public enum TransactionType {
     VIRTUAL_CHARGE, // 가상 충전 (테스트용)
     ADMIN_CHARGE,   // 관리자 충전
     KAKAO_PAY,      // 카카오페이 충전
-    BANK_TRANSFER   // 계좌이체
+    BANK_TRANSFER,  // 계좌이체
+    NAVER_PAY       // 네이버페이 충전
 } 

@@ -19,8 +19,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Profile("virtual")
 @RequiredArgsConstructor
-@Profile({"local", "dev"})  // 개발 환경에서만 사용
 public class VirtualPaymentService implements PaymentService {
     private final AccountService accountService;
     private final Map<String, PaymentInfo> paymentInfoMap = new ConcurrentHashMap<>();
@@ -55,7 +55,7 @@ public class VirtualPaymentService implements PaymentService {
 
     @Override
     public void cancelPayment(String paymentKey, String reason) {
-        // 개발용이므로 실제 구현 없음
+        // 개���용이므로 실제 구현 없음
     }
 
     private PaymentInfo getPaymentInfo(String orderId) {

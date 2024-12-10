@@ -26,6 +26,15 @@ app:
     domain: localhost
     secure: false
     same-site: Lax
+  backend:
+    url: http://localhost:8080
+
+naverpay:
+  api:
+    url: https://dev.apis.naver.com/naverpay-partner/naverpay/payments/v2.2
+  success-url: http://localhost:8080/api/v1/payments/naver/success
+  fail-url: http://localhost:8080/api/v1/payments/naver/fail
+  cancel-url: http://localhost:8080/api/v1/payments/naver/cancel
 
 minio:
   url: http://localhost:9000
