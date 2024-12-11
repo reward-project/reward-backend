@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.outsider.reward.domain.finance.command.domain.RewardBudget;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.mission.command.domain.Mission;
 import com.outsider.reward.domain.platform.command.domain.Platform;
@@ -54,21 +55,18 @@ public class StoreMission extends Mission {
     @Column(name = "product_id", nullable = false)
     private String productId;
 
-    @Column(name = "option_id", nullable = false)
-    private String optionId;
 
     @Builder
     public StoreMission(String rewardName, Platform platform, String storeName, Member registrant,
-                       String productLink, String keyword, String productId, String optionId,
-                       LocalDate startDate, LocalDate endDate, Double rewardAmount, int maxRewardsPerDay,
-                       Set<Tag> tags) {
+                       String productLink, String keyword, String productId,
+                       LocalDate startDate, LocalDate endDate,
+                       Double rewardAmount, int maxRewardsPerDay, Set<Tag> tags) {
         super(rewardName, registrant, startDate, endDate, rewardAmount, maxRewardsPerDay, tags);
         this.platform = platform;
         this.storeName = storeName;
         this.productLink = productLink;
         this.keyword = keyword;
         this.productId = productId;
-        this.optionId = optionId;
     }
 
     @Override
@@ -87,7 +85,7 @@ public class StoreMission extends Mission {
             .collect(Collectors.toSet());
     }
 
-    public void updateTags(List<Tag> newTags) {
+    public void updateTags(Set<Tag> newTags) {
         getTags().clear();
         getTags().addAll(newTags);
     }
@@ -169,30 +167,32 @@ public class StoreMission extends Mission {
         return remainingAmount;
     }
 
-    public MissionStatus getStatus() {
-        LocalDate now = LocalDate.now();
-        
-        // 시작일 이전
-        if (now.isBefore(getStartDate())) {
-            return MissionStatus.SCHEDULED;
-        }
-        
-        // 종료일 이후
-        if (now.isAfter(getEndDate())) {
-            return MissionStatus.EXPIRED;
-        }
-        
-        // 오늘 최대 리워드 도달 여부 확인
-        if (getTodayUsageCount() >= getMaxRewardsPerDay()) {
-            return MissionStatus.DAILY_LIMIT_REACHED;
-        }
-        
-        // 총 예산 소진 여부 확인
-        RewardBudget budget = getBudget();
-        if (budget != null && budget.isExhausted()) {
-            return MissionStatus.BUDGET_EXHAUSTED;
-        }
-        
-        return MissionStatus.ACTIVE;
+
+    public void updateReward(
+            String rewardName,
+            double rewardAmount,
+            int maxRewardsPerDay,
+            LocalDate startDate,
+            LocalDate endDate) {
+        super.updateReward(rewardName, rewardAmount, maxRewardsPerDay, startDate, endDate);
+    }
+
+    public void updateStore(
+            String storeName,
+            String productLink,
+            String keyword,
+            String productId) {
+        this.storeName = storeName;
+        this.productLink = productLink;
+        this.keyword = keyword;
+        this.productId = productId;
+    }
+
+    public void updatePlatform(Platform platform) {
+        this.platform = platform;
+    }
+
+    public Long getRegistrantId() {
+        return getRegistrant().getId();
     }
 }

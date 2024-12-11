@@ -1,4 +1,4 @@
-package com.outsider.reward.domain.store.command.domain;
+package com.outsider.reward.domain.finance.command.domain;
 
 import com.outsider.reward.domain.mission.command.domain.Mission;
 import jakarta.persistence.*;
@@ -93,5 +93,19 @@ public class RewardBudget extends BaseTimeEntity {
     public double getUsageRate() {
         if (totalBudget == 0) return 0;
         return (usedBudget / totalBudget) * 100;
+    }
+
+    public void setTotalAmount(Double totalAmount) {
+        if (totalAmount < this.usedBudget) {
+            throw new IllegalArgumentException(
+                String.format("새로운 총 예산(%f)이 이미 사용된 예산(%f)보다 작을 수 없습니다", 
+                    totalAmount, this.usedBudget)
+            );
+        }
+        this.totalBudget = totalAmount;
+    }
+
+    public void setMaxRewardsPerDay(int maxRewardsPerDay) {
+        this.maxRewardsPerDay = maxRewardsPerDay;
     }
 }

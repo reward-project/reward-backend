@@ -54,18 +54,17 @@ public class MissionCompletionService {
         double rewardAmount = mission.getRewardAmount();
         validateAndUpdateBudget(mission, rewardAmount);
 
-        // 6. 리워드 지급 처리
-        // 6.1 리워드 사용 내역 기록
-        RewardUsage rewardUsage = new RewardUsage(mission, user, rewardAmount);
-        rewardUsage.complete();  // 상태를 COMPLETED로 변경하고 usedAt 설정
-        rewardUsageRepository.save(rewardUsage);
-
-        // 6.2 미션 완료 기록
+        // 6.1 미션 완료 기록
         MissionCompletion completion = MissionCompletion.builder()
             .userId(userId)
             .mission(mission)
             .build();
         missionCompletionRepository.save(completion);
+
+        // 6.2 리워드 사용 내역 기록
+        RewardUsage rewardUsage = new RewardUsage(mission, user, rewardAmount);
+        rewardUsage.complete();  // 상태를 COMPLETED로 변경하고 usedAt 설정
+        rewardUsageRepository.save(rewardUsage);
 
         // 6.3 사용자 계정 업데이트
         account.addBalance(rewardAmount);

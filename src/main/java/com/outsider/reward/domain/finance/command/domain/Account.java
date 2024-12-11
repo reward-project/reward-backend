@@ -61,6 +61,10 @@ public class Account extends BaseTimeEntity {
 
     private String bankCode;      // 은행코드
 
+    public double getBalance() {
+        return balance;
+    }
+
     public void addTransaction(Transaction transaction) {
         this.transactions.add(transaction);
         this.balance += transaction.getAmount();

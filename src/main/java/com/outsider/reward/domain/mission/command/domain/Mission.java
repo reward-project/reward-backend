@@ -1,7 +1,8 @@
 package com.outsider.reward.domain.mission.command.domain;
 
+import com.outsider.reward.domain.finance.command.domain.RewardBudget;
 import com.outsider.reward.domain.member.command.domain.Member;
-import com.outsider.reward.domain.store.command.domain.RewardBudget;
+import com.outsider.reward.domain.store.command.domain.MissionStatus;
 import com.outsider.reward.domain.store.command.domain.RewardUsage;
 import com.outsider.reward.domain.tag.command.domain.Tag;
 import jakarta.persistence.*;
@@ -53,6 +54,9 @@ public abstract class Mission {
     @Column(name = "max_rewards_per_day", nullable = false)
     private int maxRewardsPerDay;
 
+    @Column(name = "total_budget", nullable = false)
+    private Long totalBudget;
+
     @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RewardUsage> rewardUsages = new HashSet<>();
 
@@ -64,10 +68,8 @@ public abstract class Mission {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    protected Mission(String rewardName, Member registrant,
-                   LocalDate startDate, LocalDate endDate, 
-                   Double rewardAmount, int maxRewardsPerDay,
-                   Set<Tag> tags) {
+    protected Mission(String rewardName, Member registrant, LocalDate startDate, LocalDate endDate,
+                   Double rewardAmount, int maxRewardsPerDay, Set<Tag> tags) {
         this.rewardId = UUID.randomUUID().toString();
         this.rewardName = rewardName;
         this.registrant = registrant;
@@ -76,6 +78,16 @@ public abstract class Mission {
         this.rewardAmount = rewardAmount;
         this.maxRewardsPerDay = maxRewardsPerDay;
         this.tags = tags != null ? tags : new HashSet<>();
+        initializeTotalBudget();
+    }
+
+    private void initializeTotalBudget() {
+        int durationInDays = (int) java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        this.totalBudget = (long) (rewardAmount * maxRewardsPerDay * durationInDays);
+    }
+
+    public Long getTotalBudget() {
+        return totalBudget;
     }
 
     public abstract boolean validateAnswer(String answer);
@@ -112,5 +124,64 @@ public abstract class Mission {
     public boolean hasUserUsedReward(Member user) {
         return rewardUsages.stream()
             .anyMatch(usage -> usage.getUser().equals(user));
+    }
+
+    public void updateReward(
+            String rewardName,
+            double rewardAmount,
+            int maxRewardsPerDay,
+            LocalDate startDate,
+            LocalDate endDate) {
+        this.rewardName = rewardName;
+        this.rewardAmount = rewardAmount;
+        this.maxRewardsPerDay = maxRewardsPerDay;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        initializeTotalBudget();
+        if (this.budget == null) {
+            initializeBudget(rewardAmount * maxRewardsPerDay * (endDate.toEpochDay() - startDate.toEpochDay() + 1));
+        } else {
+            this.budget.setTotalAmount(rewardAmount * maxRewardsPerDay * (endDate.toEpochDay() - startDate.toEpochDay() + 1));
+            this.budget.setMaxRewardsPerDay(maxRewardsPerDay);
+        }
+    }
+
+    public Member getRegistrant() {
+        return registrant;
+    }
+    public int getTodayUsageCount() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        return (int) getRewardUsages().stream()
+            .filter(usage -> usage.getUsedAt().isAfter(startOfDay) && 
+                           usage.getUsedAt().isBefore(endOfDay))
+            .count();
+    }
+
+    public MissionStatus getStatus() {
+        LocalDate now = LocalDate.now();
+        
+        // 시작일 이전
+        if (now.isBefore(getStartDate())) {
+            return MissionStatus.SCHEDULED;
+        }
+        
+        // 종료일 이후
+        if (now.isAfter(getEndDate())) {
+            return MissionStatus.EXPIRED;
+        }
+        
+        // 오늘 최대 리워드 도달 여부 확인
+        if (getTodayUsageCount() >= getMaxRewardsPerDay()) {
+            return MissionStatus.DAILY_LIMIT_REACHED;
+        }
+        
+        // 총 예산 소진 여부 확인
+        RewardBudget budget = getBudget();
+        if (budget != null && budget.isExhausted()) {
+            return MissionStatus.BUDGET_EXHAUSTED;
+        }
+        
+        return MissionStatus.ACTIVE;
     }
 }

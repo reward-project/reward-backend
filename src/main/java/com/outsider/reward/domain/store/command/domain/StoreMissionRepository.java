@@ -41,4 +41,11 @@ public interface StoreMissionRepository extends JpaRepository<StoreMission, Long
            "WHERE (sm.startDate IS NULL OR sm.startDate <= :date) " +
            "AND (sm.endDate IS NULL OR sm.endDate >= :date)")
     long countActiveMissions(@Param("date") LocalDate date);
+
+    @Query("SELECT sm FROM StoreMission sm " +
+           "LEFT JOIN FETCH sm.registrant " +
+           "LEFT JOIN FETCH sm.platform " +
+           "LEFT JOIN FETCH sm.tags " +
+           "WHERE sm.id = :id")
+    Optional<StoreMission> findByIdWithRegistrant(@Param("id") Long id);
 }

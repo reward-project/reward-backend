@@ -27,6 +27,10 @@ public class Transaction extends BaseTimeEntity {
     @Column(nullable = false)
     private double amount;
 
+    public double getAmount() {
+        return amount;
+    }
+
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
@@ -43,8 +47,7 @@ public class Transaction extends BaseTimeEntity {
     private TransactionStatus status;
 
     @Builder
-    public Transaction(Account account, double amount, TransactionType type, 
-                      String description, RewardUsage rewardUsage) {
+    public Transaction(Account account, double amount, TransactionType type, String description, RewardUsage rewardUsage) {
         this.account = account;
         this.amount = amount;
         this.type = type;

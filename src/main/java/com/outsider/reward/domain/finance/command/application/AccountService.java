@@ -3,6 +3,8 @@ package com.outsider.reward.domain.finance.command.application;
 import com.outsider.reward.domain.finance.command.domain.Account;
 import com.outsider.reward.domain.finance.command.domain.AccountRepository;
 import com.outsider.reward.domain.finance.command.domain.AccountStatus;
+import com.outsider.reward.domain.finance.command.domain.RewardBudget;
+import com.outsider.reward.domain.finance.command.domain.RewardBudgetRepository;
 import com.outsider.reward.domain.finance.command.domain.Transaction;
 import com.outsider.reward.domain.finance.command.domain.TransactionRepository;
 import com.outsider.reward.domain.finance.command.domain.TransactionType;
@@ -10,9 +12,12 @@ import com.outsider.reward.domain.finance.exception.AccountException;
 import com.outsider.reward.domain.finance.exception.AccountErrorCode;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +26,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final MemberRepository memberRepository;
+    private final RewardBudgetRepository rewardBudgetRepository;
 
     public Account createAccount(Long userId) {
         Member member = memberRepository.findById(userId)
@@ -51,7 +57,6 @@ public class AccountService {
         account.addTransaction(transaction);
         transactionRepository.save(transaction);
     }
-
 
     public void registerBankAccount(Long userId, String bankName, String accountNumber, String accountHolder) {
         Account account = accountRepository.findByMemberId(userId)
@@ -87,8 +92,34 @@ public class AccountService {
         return true;
     }
 
+    @Transactional(readOnly = true)
+    public void validateBalance(Long memberId, double requiredAmount) {
+        Account account = accountRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new AccountException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        // 현재 진행 중인 미션들의 총 예산 계산
+        double reservedBudget = rewardBudgetRepository.findAllByMemberIdAndStatusIn(
+            memberId, 
+            LocalDate.now()
+        ).stream()
+        .mapToDouble(RewardBudget::getTotalBudget)
+        .sum();
+
+        // 실제 사용 가능한 잔액 = 계정 잔액 - 이미 예약된 예산
+        double availableBalance = account.getBalance() - reservedBudget;
+
+        if (availableBalance < requiredAmount) {
+            throw new AccountException(
+                AccountErrorCode.INSUFFICIENT_BALANCE, 
+                new RuntimeException(String.format(
+                    "계정 잔액이 부족합니다. 필요 금액: %.0f원, 사용 가능한 잔액: %.0f원 (총 잔액: %.0f원, 예약된 금액: %.0f원)", 
+                    requiredAmount, availableBalance, account.getBalance(), reservedBudget))
+            );
+        }
+    }
+
     public Account getAccount(Long userId) {
         return accountRepository.findByMemberId(userId)
             .orElseThrow(() -> new AccountException(AccountErrorCode.ACCOUNT_NOT_FOUND));
     }
-} 
+}

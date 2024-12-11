@@ -1,8 +1,11 @@
 package com.outsider.reward.domain.store.presentation;
 
 import com.outsider.reward.domain.store.command.application.StoreMissionCommandService;
+import com.outsider.reward.domain.store.command.domain.StoreMission;
 import com.outsider.reward.domain.store.command.dto.CreateStoreMissionRequest;
 import com.outsider.reward.domain.store.command.dto.StoreMissionResponse;
+import com.outsider.reward.domain.store.command.dto.UpdateStoreMissionRequest;
+import com.outsider.reward.domain.store.command.dto.DeleteStoreMissionsRequest;
 import com.outsider.reward.domain.store.command.mapper.StoreMissionMapper;
 import com.outsider.reward.domain.store.query.application.StoreMissionQueryService;
 import com.outsider.reward.domain.store.query.dto.StoreMissionQueryDto;
@@ -76,4 +79,45 @@ public class StoreMissionController {
         List<StoreMissionQueryDto> missions = queryService.findByTag(tag);
         return ResponseEntity.ok(ApiResponse.success(missions, "태그로 스토어 미션 목록을 성공적으로 조회했습니다."));
     }
+
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<StoreMissionQueryDto>> getStoreMissionForEdit(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(queryService.findByIdForEdit(id)));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<StoreMissionResponse>> updateStoreMission(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateStoreMissionRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            log.debug("Updating store mission with id: {} and request: {}", id, request);
+            StoreMissionResponse response = commandService.updateStoreMission(id, request, userDetails.getMember().getId());
+            return ResponseEntity.ok(ApiResponse.success(response, "리워드가 성공적으로 수정되었습니다."));
+        } catch (Exception e) {
+            log.error("Error updating store mission", e);
+            throw e;
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> deleteStoreMission(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            log.debug("Deleting store mission with id: {}", id);
+            commandService.deleteStoreMission(id, userDetails.getMember().getId());
+            return ResponseEntity.ok(ApiResponse.success(null, "리워드가 성공적으로 삭제되었습니다."));
+        } catch (Exception e) {
+            log.error("Error deleting store mission", e);
+            throw e;
+        }
+    }
+
+   
 }

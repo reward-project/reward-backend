@@ -1,27 +1,29 @@
 package com.outsider.reward.domain.store.command.domain;
 
-import com.querydsl.core.types.Projections;
+import com.outsider.reward.domain.finance.command.domain.QRewardBudget;
+import com.outsider.reward.domain.member.command.domain.QMember;
+import com.outsider.reward.domain.platform.command.domain.QPlatform;
+import com.outsider.reward.domain.store.command.domain.QStoreMission;
+import com.outsider.reward.domain.store.query.dto.StoreMissionQueryResponse;
+import com.outsider.reward.domain.store.query.mapper.StoreMissionQueryMapper;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.stereotype.Repository;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import com.outsider.reward.domain.store.query.dto.StoreMissionQueryResponse;
-import com.outsider.reward.domain.store.query.mapper.StoreMissionQueryMapper;
-import com.outsider.reward.domain.store.command.domain.QStoreMission;
-import com.outsider.reward.domain.store.command.domain.QMissionCompletion;
-import com.outsider.reward.domain.store.command.domain.QRewardUsage;
-import com.outsider.reward.domain.store.command.domain.QRewardBudget;
-import com.querydsl.core.Tuple;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Repository
 @RequiredArgsConstructor
 public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom {
     private final JPAQueryFactory queryFactory;
@@ -95,8 +97,8 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
     }
 
     private BooleanExpression hasRemainingBudget(QRewardBudget budget) {
-        return budget.isNull()
-            .or(budget.totalBudget.subtract(budget.usedBudget).gt(0));
+        return budget.usedBudget.lt(budget.totalBudget)
+            .and(budget.usedRewardsToday.lt(budget.maxRewardsPerDay));
     }
 
     private BooleanExpression hasRemainingDailyRewards(QStoreMission mission, QRewardUsage usage, LocalDate date) {

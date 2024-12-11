@@ -7,33 +7,33 @@ import com.outsider.reward.domain.store.query.dto.RegistrantInfo;
 import com.outsider.reward.domain.store.query.dto.common.BaseTimeInfo;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 @Getter
+@Setter
 @SuperBuilder
 public class StoreMissionResponse extends BaseTimeInfo {
-    private final Long id;
-    private final PlatformInfo platform;
-    private final RewardInfo reward;
-    private final StoreInfo store;
-    private final RegistrantInfo registrant;
-    private final int totalUsageCount;
-    private final int todayUsageCount;
-    private final double usageRate;
-    private final Map<Integer, Integer> usageByHour;
-    private final Map<String, Integer> usageByDay;
-    private final List<RewardUsageResponse> recentUsages;
+    private Long id;
+    private PlatformInfo platform;
+    private RewardInfo reward;
+    private StoreInfo store;
+    private RegistrantInfo registrant;
+    private int totalUsageCount;
+    private int todayUsageCount;
+    private double usageRate;
+    private Map<Integer, Integer> usageByHour;
+    private Map<String, Integer> usageByDay;
+    private List<RewardUsageResponse> recentUsages;
 
     @Getter
     @SuperBuilder
     public static class RewardUsageResponse {
-        private final LocalDateTime timestamp;
-        private final String userId;
-        private final String userName;
-        private final double amount;
-        private final String status;
+        private Long id;
+        private String memberName;
+        private LocalDateTime usedAt;
     }
 }

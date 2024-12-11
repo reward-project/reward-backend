@@ -10,6 +10,5 @@ public class StoreInfo {
     private final String productLink;
     private final String keyword;
     private final String productId;
-    private final String optionId;
     private final String storeStatus;
-} 
+}

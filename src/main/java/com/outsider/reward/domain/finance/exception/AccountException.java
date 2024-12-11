@@ -11,4 +11,4 @@ public class AccountException extends BusinessException {
     public AccountException(ErrorCode errorCode, Throwable cause) {
         super(errorCode, cause);
     }
-} 
+}

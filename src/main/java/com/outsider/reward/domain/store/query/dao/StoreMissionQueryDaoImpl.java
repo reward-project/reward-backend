@@ -37,7 +37,6 @@ public class StoreMissionQueryDaoImpl implements StoreMissionQueryDaoCustom {
                 QStoreMission.storeMission.productLink,
                 QStoreMission.storeMission.keyword,
                 QStoreMission.storeMission.productId,
-                QStoreMission.storeMission.optionId,
                 QStoreMission.storeMission.startDate,
                 QStoreMission.storeMission.endDate,
                 QStoreMission.storeMission.rewardAmount,

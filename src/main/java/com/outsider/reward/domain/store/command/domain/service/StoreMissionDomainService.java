@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.member.exception.MemberException;
 import com.outsider.reward.domain.member.exception.MemberErrorCode;
+import com.outsider.reward.domain.finance.command.application.AccountService;
 import com.outsider.reward.domain.finance.command.domain.Account;
 import com.outsider.reward.domain.finance.command.domain.AccountRepository;
 import com.outsider.reward.domain.finance.command.domain.Transaction;
@@ -46,11 +47,12 @@ public class StoreMissionDomainService {
     private final PlatformRepository platformRepository;
     private final TagRepository tagRepository;
     private final MemberRepository memberRepository;
-
+    private final AccountService accountService;
     public void validateStoreMission(StoreMission storeMission) {
         validateDates(storeMission);
         validatePlatformStatus(storeMission);
         validateProductLink(storeMission);
+        accountService.validateBalance(storeMission.getRegistrantId(), storeMission.getTotalBudget());
     }
 
     @Transactional

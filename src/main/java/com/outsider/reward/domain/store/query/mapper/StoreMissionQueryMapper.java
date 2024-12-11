@@ -103,7 +103,6 @@ public interface StoreMissionQueryMapper {
             .productLink(mission.getProductLink())
             .keyword(mission.getKeyword())
             .productId(mission.getProductId())
-            .optionId(mission.getOptionId())
             .build();
     }
 
