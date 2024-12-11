@@ -3,25 +3,26 @@ package com.outsider.reward.domain.store.command.application;
 import com.outsider.reward.domain.member.command.application.MemberCommandService;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
-import com.outsider.reward.domain.platform.command.application.PlatformService;
 import com.outsider.reward.domain.platform.command.domain.Platform;
-import com.outsider.reward.domain.platform.command.domain.PlatformDomain;
-import com.outsider.reward.domain.platform.command.domain.PlatformDomainRepository;
-import com.outsider.reward.domain.platform.command.domain.PlatformDomainStatus;
 import com.outsider.reward.domain.platform.command.domain.PlatformRepository;
+import com.outsider.reward.domain.platform.command.domain.PlatformDomainRepository;
+import com.outsider.reward.domain.platform.command.domain.PlatformDomain;
 import com.outsider.reward.domain.platform.command.domain.PlatformStatus;
+import com.outsider.reward.domain.platform.command.application.PlatformService;
 import com.outsider.reward.domain.platform.command.dto.CreatePlatformRequest;
 import com.outsider.reward.domain.platform.command.dto.PlatformResponse;
+import com.outsider.reward.domain.tag.command.domain.Tag;
+import com.outsider.reward.domain.tag.command.domain.TagRepository;
+import com.outsider.reward.domain.store.command.domain.StoreMission;
 import com.outsider.reward.domain.store.command.domain.StoreMissionRepository;
 import com.outsider.reward.domain.store.command.dto.CreateStoreMissionRequest;
 import com.outsider.reward.domain.store.command.dto.StoreMissionResponse;
-import com.outsider.reward.domain.tag.command.domain.Tag;
-import com.outsider.reward.domain.tag.command.domain.TagRepository;
+import com.outsider.reward.domain.finance.command.application.AccountService;
+import com.outsider.reward.domain.finance.command.domain.TransactionType;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,6 @@ import java.util.List;
 
 @Slf4j
 @Component
-@Profile("dev")
 @RequiredArgsConstructor
 public class DummyDataInitializer {
 
@@ -45,6 +45,7 @@ public class DummyDataInitializer {
     private final PlatformService platformService;
     private final MissionCompletionService missionCompletionService;
     private final MemberCommandService memberCommandService;
+    private final AccountService accountService;
 
     @PostConstruct
     @Transactional
@@ -54,20 +55,35 @@ public class DummyDataInitializer {
             return;
         }
 
+        log.info("Initializing dummy data...");
+
+        // 1. Create Member
         Member member = createMember();
+        log.info("Member created successfully: {}", member.getId());
+
+        // 2. Add initial balance to account
+        accountService.addBalance(member.getId(), 1000000.0, TransactionType.VIRTUAL_CHARGE, "Initial balance for testing");
+        log.info("Added initial balance to account for member: {}", member.getId());
+
+        // 3. Create Platform
         Platform platform = createPlatform();
+        log.info("Platform created successfully: {}", platform.getId());
+
+        // 4. Create Tag
         Tag tag = createTag(member);
+        log.info("Tag created successfully: {}", tag.getId());
+
+        // 5. Create Store Mission
         StoreMissionResponse mission = createStoreMission(member, platform, tag);
+        log.info("Store mission created successfully: {}", mission.getId());
         
-        // Complete the mission with productId as answer
-            missionCompletionService.completeMission(
-                member.getId(),
-                mission.getId(),
-                "PROD123"  // productId를 답변으로 사용
-            );
-            log.info("Mission completed successfully for member: {}", member.getId());
-   
-        
+        // 6. Complete the mission
+        missionCompletionService.completeMission(
+            member.getId(),
+            mission.getId(),
+            "PROD123"
+        );
+        log.info("Mission completed successfully for member: {}", member.getId());
     }
 
     private boolean isDataAlreadyExists() {
@@ -82,8 +98,8 @@ public class DummyDataInitializer {
             "dudnjsckrgo@gmail.com",
             "윤여원",
             "google",
-            "platform",  // platform value
-            "user"      // default role
+            "platform",
+            "user"
         );
     }
 

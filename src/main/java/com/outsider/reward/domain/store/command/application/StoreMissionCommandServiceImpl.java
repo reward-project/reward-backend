@@ -35,7 +35,7 @@ public class StoreMissionCommandServiceImpl implements StoreMissionCommandServic
         
         StoreMission storeMission = storeMissionMapper.toEntity(request, platformRepository, tagRepository, registrant);
         storeMissionDomainService.validateStoreMission(storeMission);
-        StoreMission savedMission = storeMissionRepository.save(storeMission);
+        StoreMission savedMission = storeMissionDomainService.createStoreMission(request);
         return storeMissionMapper.toResponse(savedMission);
     }
 }
