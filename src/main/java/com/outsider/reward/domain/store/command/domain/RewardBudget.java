@@ -1,5 +1,6 @@
 package com.outsider.reward.domain.store.command.domain;
 
+import com.outsider.reward.domain.mission.command.domain.Mission;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,77 +19,79 @@ public class RewardBudget extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_mission_id")
-    private StoreMission storeMission;
+    @OneToOne
+    @JoinColumn(name = "mission_id")
+    private Mission mission;
 
     @Column(nullable = false)
-    private double totalBudget;        // 총 예산
+    private double totalBudget;
 
     @Column(nullable = false)
-    private double remainingBudget;    // 남은 예산
+    private double usedBudget;
 
     @Column(nullable = false)
-    private double dailyBudget;        // 일일 예산
+    private int maxRewardsPerDay;
 
     @Column(nullable = false)
-    private double todayUsedBudget;    // 오늘 사용된 예산
+    private int usedRewardsToday;
 
     @Column(nullable = false)
-    private int maxRewardsPerDay;      // 일일 최대 리워드 수
+    private LocalDateTime lastRewardDate;
 
-    @Column(nullable = false)
-    private int todayRewardCount;      // 오늘 사용된 리워드 수
-
-    @Column(nullable = false)
-    private LocalDateTime lastResetTime;  // 마지막 일일 리셋 시간
-
-    public RewardBudget(StoreMission storeMission, double totalBudget, int maxRewardsPerDay) {
-        this.storeMission = storeMission;
+    public RewardBudget(Mission mission, double totalBudget, int maxRewardsPerDay) {
+        this.mission = mission;
         this.totalBudget = totalBudget;
-        this.remainingBudget = totalBudget;
-        this.dailyBudget = totalBudget / storeMission.getDurationInDays();
         this.maxRewardsPerDay = maxRewardsPerDay;
-        this.todayUsedBudget = 0;
-        this.todayRewardCount = 0;
-        this.lastResetTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        this.usedBudget = 0;
+        this.usedRewardsToday = 0;
+        this.lastRewardDate = LocalDateTime.now();
     }
 
     public boolean canUseReward(double amount) {
-        checkAndResetDaily();
-        return remainingBudget >= amount &&
-               todayUsedBudget + amount <= dailyBudget &&
-               todayRewardCount < maxRewardsPerDay;
+        return getRemainingBudget() >= amount && !isDailyLimitExceeded();
     }
 
     public void useReward(double amount) {
         if (!canUseReward(amount)) {
-            throw new IllegalStateException("Cannot use reward: Budget or daily limit exceeded");
+            throw new IllegalStateException("Cannot use reward: either insufficient budget or daily limit exceeded");
         }
-        remainingBudget -= amount;
-        todayUsedBudget += amount;
-        todayRewardCount++;
+        this.usedBudget += amount;
+        incrementDailyUsage();
     }
 
-    private void checkAndResetDaily() {
+    public double getRemainingBudget() {
+        return totalBudget - usedBudget;
+    }
+
+    public void setRemainingAmount(double amount) {
+        this.usedBudget = this.totalBudget - amount;
+    }
+
+    public boolean isExhausted() {
+        return getRemainingBudget() <= 0;
+    }
+
+    private boolean isDailyLimitExceeded() {
+        updateDailyUsage();
+        return usedRewardsToday >= maxRewardsPerDay;
+    }
+
+    private void incrementDailyUsage() {
+        updateDailyUsage();
+        usedRewardsToday++;
+        lastRewardDate = LocalDateTime.now();
+    }
+
+    private void updateDailyUsage() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime todayStart = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
-        if (lastResetTime.isBefore(todayStart)) {
-            todayUsedBudget = 0;
-            todayRewardCount = 0;
-            lastResetTime = todayStart;
+        if (!now.toLocalDate().equals(lastRewardDate.toLocalDate())) {
+            usedRewardsToday = 0;
+            lastRewardDate = now;
         }
     }
 
     public double getUsageRate() {
-        return ((totalBudget - remainingBudget) / totalBudget) * 100;
+        if (totalBudget == 0) return 0;
+        return (usedBudget / totalBudget) * 100;
     }
-
-    public boolean isExhausted() {
-        return remainingBudget <= 0;
-    }
-
-    public void setRemainingAmount(double amount) {
-        this.remainingBudget = amount;
-    }
-} 
+}

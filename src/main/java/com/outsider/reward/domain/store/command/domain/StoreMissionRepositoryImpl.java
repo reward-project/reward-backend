@@ -16,6 +16,7 @@ import com.outsider.reward.domain.store.query.mapper.StoreMissionQueryMapper;
 import com.outsider.reward.domain.store.command.domain.QStoreMission;
 import com.outsider.reward.domain.store.command.domain.QMissionCompletion;
 import com.outsider.reward.domain.store.command.domain.QRewardUsage;
+import com.outsider.reward.domain.store.command.domain.QRewardBudget;
 import com.querydsl.core.Tuple;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
         QStoreMission mission = QStoreMission.storeMission;
         QMissionCompletion completion = QMissionCompletion.missionCompletion;
         QRewardUsage usage = QRewardUsage.rewardUsage;
+        QRewardBudget budget = QRewardBudget.rewardBudget;
         
         // 메인 쿼리
         JPQLQuery<Tuple> query = queryFactory
@@ -42,15 +44,15 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
             )
             .from(mission)
             .leftJoin(completion)
-            .on(completion.mission.eq(mission)
+            .on(completion.mission.id.eq(mission.id)
                 .and(completion.userId.eq(userId)))
-            .leftJoin(mission.budget)
+            .leftJoin(mission.budget, budget)
             .leftJoin(usage)
-            .on(usage.storeMission.eq(mission)
+            .on(usage.mission.id.eq(mission.id)
                 .and(usage.user.id.eq(userId)))
             .where(
                 isWithinDateRange(mission, date),
-                hasRemainingBudget(mission),
+                hasRemainingBudget(budget),
                 hasRemainingDailyRewards(mission, usage, date),
                 usage.isNull().or(usage.status.ne(RewardUsageStatus.COMPLETED))  // 성공한 미션은 제외
             );
@@ -73,12 +75,13 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
         JPQLQuery<Long> countQuery = queryFactory
             .select(mission.count())
             .from(mission)
+            .leftJoin(mission.budget, budget)
             .leftJoin(usage)
-            .on(usage.storeMission.eq(mission)
+            .on(usage.mission.id.eq(mission.id)
                 .and(usage.user.id.eq(userId)))
             .where(
                 isWithinDateRange(mission, date),
-                hasRemainingBudget(mission),
+                hasRemainingBudget(budget),
                 hasRemainingDailyRewards(mission, usage, date),
                 usage.isNull().or(usage.status.ne(RewardUsageStatus.COMPLETED))  // 성공한 미션은 제외
             );
@@ -91,9 +94,9 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
             .and(mission.endDate.goe(date));
     }
 
-    private BooleanExpression hasRemainingBudget(QStoreMission mission) {
-        return mission.budget.isNull()
-            .or(mission.budget.remainingBudget.gt(0));
+    private BooleanExpression hasRemainingBudget(QRewardBudget budget) {
+        return budget.isNull()
+            .or(budget.totalBudget.subtract(budget.usedBudget).gt(0));
     }
 
     private BooleanExpression hasRemainingDailyRewards(QStoreMission mission, QRewardUsage usage, LocalDate date) {
@@ -103,7 +106,7 @@ public class StoreMissionRepositoryImpl implements StoreMissionRepositoryCustom 
         return JPAExpressions
             .select(usage.count())
             .from(usage)
-            .where(usage.storeMission.eq(mission)
+            .where(usage.mission.id.eq(mission.id)
                 .and(usage.usedAt.between(startOfDay, endOfDay)))
             .lt(mission.maxRewardsPerDay.longValue());
     }

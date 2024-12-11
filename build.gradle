@@ -76,9 +76,13 @@ dependencies {
     
     developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
     runtimeOnly 'com.mysql:mysql-connector-j'
+    
+    // Test dependencies
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testImplementation "org.springframework.security:spring-security-test:${springSecurityVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'com.h2database:h2'
+    
     implementation "io.minio:minio:${minioVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter-aws:${springCloudVersion}"
     implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")

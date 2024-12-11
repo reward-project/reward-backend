@@ -38,6 +38,9 @@ public class MemberCommand {
         
         @NotBlank(message = "{member.password.login.required}")
         private String password;
+
+        @NotBlank(message = "{member.role.required}")
+        private String role;
     }
     
     @Getter

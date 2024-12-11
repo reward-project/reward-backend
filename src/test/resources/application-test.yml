@@ -1,0 +1,67 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: false
+  sql:
+    init:
+      mode: never
+  h2:
+    console:
+      enabled: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope:
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+jwt:
+  secret: testsecrettestsecrettestsecrettestsecrettestsecret
+  access-token-validity: 3600
+  refresh-token-validity: 86400
+
+app:
+  frontend:
+    url: http://localhost:3000
+  cookie:
+    domain: localhost
+    secure: false
+    same-site: Lax
+
+naver-pay:
+  client:
+    id: test-client-id
+    secret: test-client-secret
+    chain-id: test-chain-id
+
+logging:
+  level:
+    org.springframework: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.outsider.reward: DEBUG

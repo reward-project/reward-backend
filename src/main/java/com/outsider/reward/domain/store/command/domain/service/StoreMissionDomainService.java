@@ -11,7 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.outsider.reward.domain.store.command.domain.StoreMissionRepository;
 import com.outsider.reward.domain.store.command.dto.CreateStoreMissionRequest;
 import com.outsider.reward.domain.store.command.mapper.StoreMissionMapper;
+import com.outsider.reward.domain.platform.command.domain.Platform;
+import com.outsider.reward.domain.platform.command.domain.PlatformDomainStatus;
 import com.outsider.reward.domain.platform.command.domain.PlatformRepository;
+import com.outsider.reward.domain.platform.command.domain.PlatformStatus;
 import com.outsider.reward.domain.tag.command.application.TagService;
 import com.outsider.reward.domain.tag.command.domain.TagRepository;
 import java.time.LocalDate;
@@ -46,6 +49,7 @@ public class StoreMissionDomainService {
 
     public void validateStoreMission(StoreMission storeMission) {
         validateDates(storeMission);
+        validatePlatformStatus(storeMission);
         validateProductLink(storeMission);
     }
 
@@ -91,6 +95,33 @@ public class StoreMissionDomainService {
         LocalDate today = LocalDate.now();
         if (storeMission.getStartDate().isBefore(today)) {
             throw new StoreMissionException(StoreMissionErrorCode.PAST_START_DATE);
+        }
+    }
+
+    private void validatePlatformStatus(StoreMission storeMission) {
+        Platform platform = platformRepository.findById(storeMission.getPlatform().getId())
+            .orElseThrow(() -> new StoreMissionException(StoreMissionErrorCode.PLATFORM_NOT_FOUND));
+
+        if (platform.getStatus() != PlatformStatus.ACTIVE) {
+            throw new StoreMissionException(StoreMissionErrorCode.PLATFORM_NOT_ACTIVE);
+        }
+
+        String domain = extractDomain(storeMission.getProductLink());
+        boolean hasActiveDomain = platform.getDomains().stream()
+            .anyMatch(d -> d.getDomain().equals(domain) && d.getStatus() == PlatformDomainStatus.ACTIVE);
+
+        if (!hasActiveDomain) {
+            throw new StoreMissionException(StoreMissionErrorCode.PLATFORM_DOMAIN_NOT_ACTIVE);
+        }
+    }
+
+    private String extractDomain(String url) {
+        try {
+            java.net.URI uri = new java.net.URI(url);
+            String domain = uri.getHost();
+            return domain.startsWith("www.") ? domain.substring(4) : domain;
+        } catch (java.net.URISyntaxException e) {
+            throw new StoreMissionException(StoreMissionErrorCode.INVALID_PRODUCT_LINK);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.outsider.reward.domain.store.command.domain;
 
+import com.outsider.reward.domain.mission.command.domain.Mission;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,13 +21,13 @@ public class MissionCompletion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mission_id")
-    private StoreMission mission;
+    private Mission mission;
 
     private Double rewardPoint;
     private LocalDateTime completedAt;
 
     @Builder
-    public MissionCompletion(Long userId, StoreMission mission) {
+    public MissionCompletion(Long userId, Mission mission) {
         this.userId = userId;
         this.mission = mission;
         this.rewardPoint = mission.getRewardAmount();

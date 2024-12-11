@@ -8,8 +8,8 @@ import java.util.List;
 
 @Repository
 public interface RewardUsageRepository extends JpaRepository<RewardUsage, Long> {
-    List<RewardUsage> findByStoreMissionId(Long storeMissionId);
-    List<RewardUsage> findByStoreMissionIdAndUsedAtBetween(Long storeMissionId, LocalDateTime start, LocalDateTime end);
-    int countByStoreMissionIdAndStatus(Long storeMissionId, RewardUsageStatus status);
-    int countByStoreMissionIdAndUsedAtBetweenAndStatus(Long storeMissionId, LocalDateTime start, LocalDateTime end, RewardUsageStatus status);
+    List<RewardUsage> findByMissionId(Long missionId);
+    List<RewardUsage> findByMissionIdAndUsedAtBetween(Long missionId, LocalDateTime start, LocalDateTime end);
+    int countByMissionIdAndStatus(Long missionId, RewardUsageStatus status);
+    int countByMissionIdAndUsedAtBetweenAndStatus(Long missionId, LocalDateTime start, LocalDateTime end, RewardUsageStatus status);
 } 

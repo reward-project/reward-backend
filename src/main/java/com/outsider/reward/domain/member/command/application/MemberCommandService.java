@@ -85,6 +85,19 @@ public class MemberCommandService {
         if (!member.isEmailVerified()) {
             throw new MemberException(MemberErrorCode.EMAIL_NOT_VERIFIED);
         }
+
+        // role 처리
+        RoleType roleType = switch (command.getRole().toLowerCase()) {
+            case "business" -> RoleType.ROLE_BUSINESS;
+            case "admin" -> RoleType.ROLE_ADMIN;
+            default -> RoleType.ROLE_USER;
+        };
+
+        if (!member.hasRole(roleType)) {
+            log.info("Adding new role {} to member with email {}", roleType, command.getEmail());
+            member.addRole(roleType);
+            memberRepository.save(member);
+        }
         
         String accessToken = jwtTokenProvider.createToken(member.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
@@ -176,16 +189,42 @@ public class MemberCommandService {
 
     @Transactional
     public Member createOAuthMember(String email, String name, String provider, String platform, String role) {
+        // 1. Role 타입 결정
+        RoleType roleType = determineRoleType(role);
+
+        // 2. Member 생성
         Member member = Member.createOAuthMember(email, name, name, provider);
-        RoleType roleType = switch (role.toLowerCase()) {
+        member.addRole(roleType);
+        member = memberRepository.save(member);
+
+        // 3. Account 생성
+        accountService.createAccount(member.getId());
+
+        log.info("Created OAuth member - Email: {}, Role: {}, Provider: {}", email, roleType, provider);
+        return member;
+    }
+
+    @Transactional
+    public Member getOrCreateOAuthMember(String email, String name, String provider, String platform, String role) {
+        return memberRepository.findByBasicInfo_Email(email)
+            .map(existingMember -> {
+                RoleType roleType = determineRoleType(role);
+                if (!existingMember.hasRole(roleType)) {
+                    log.info("Adding new role {} to existing member with email {}", roleType, email);
+                    existingMember.addRole(roleType);
+                    return memberRepository.save(existingMember);
+                }
+                return existingMember;
+            })
+            .orElseGet(() -> createOAuthMember(email, name, provider, platform, role));
+    }
+
+    private RoleType determineRoleType(String role) {
+        return switch (role.toLowerCase()) {
             case "business" -> RoleType.ROLE_BUSINESS;
             case "admin" -> RoleType.ROLE_ADMIN;
             default -> RoleType.ROLE_USER;
         };
-        member.addRole(roleType);
-        member = memberRepository.save(member);
-        accountService.createAccount(member.getId());
-        return member;
     }
 
     @Transactional
@@ -216,22 +255,8 @@ public class MemberCommandService {
                 throw new MemberException(MemberErrorCode.EMAIL_NOT_VERIFIED);
             }
 
-            // role을 RoleType으로 변환
-            RoleType roleType = switch (role.toLowerCase()) {
-                case "business" -> RoleType.ROLE_BUSINESS;
-                case "admin" -> RoleType.ROLE_ADMIN;
-                default -> RoleType.ROLE_USER;
-            };
-
             // 회원 조회 또는 생성
-            Member member = memberRepository.findByBasicInfo_Email(email)
-                .orElseGet(() -> createOAuthMember(
-                    email, 
-                    name, 
-                    "google", 
-                    payload.getSubject(),
-                    role  // 전달받은 role 사용
-                ));
+            Member member = getOrCreateOAuthMember(email, name, "google", payload.getSubject(), role);
 
             // 토큰 생성
             String accessToken = jwtTokenProvider.createToken(email);

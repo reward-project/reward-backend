@@ -50,8 +50,8 @@ public class Transaction extends BaseTimeEntity {
         this.type = type;
         this.description = description;
         this.rewardUsage = rewardUsage;
-        this.transactionDate = LocalDateTime.now();
         this.status = TransactionStatus.PENDING;
+        this.transactionDate = LocalDateTime.now();
     }
 
     public void complete() {
@@ -62,4 +62,4 @@ public class Transaction extends BaseTimeEntity {
         this.status = TransactionStatus.FAILED;
         this.description += " (실패 사유: " + reason + ")";
     }
-} 
+}

@@ -10,6 +10,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.outsider.reward.domain.member.command.application.MemberCommandService;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
+import com.outsider.reward.domain.member.command.domain.RoleType;
 import com.outsider.reward.global.security.oauth.CustomOAuth2User;
 import com.outsider.reward.global.security.oauth.info.OAuth2UserInfo;
 
@@ -42,8 +43,13 @@ public abstract class OAuth2UserService extends DefaultOAuth2UserService {
         OAuth2UserInfo userInfo = getOAuth2UserInfo(oauth2User);
         String provider = userRequest.getClientRegistration().getRegistrationId();
         
-        Member member = memberRepository.findByBasicInfo_Email(userInfo.getEmail())
-            .orElseGet(() -> createOAuthMember(userInfo, provider, platform, role));
+        Member member = memberCommandService.getOrCreateOAuthMember(
+            userInfo.getEmail(),
+            userInfo.getName(),
+            provider,
+            platform,
+            role
+        );
             
         return new CustomOAuth2User(member, oauth2User.getAttributes());
     }

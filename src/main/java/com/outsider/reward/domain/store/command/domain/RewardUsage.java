@@ -1,15 +1,16 @@
 package com.outsider.reward.domain.store.command.domain;
 
+import com.outsider.reward.domain.member.command.domain.Member;
+import com.outsider.reward.domain.mission.command.domain.Mission;
+import com.outsider.reward.domain.mission.exception.MissionErrorCode;
+import com.outsider.reward.domain.mission.exception.MissionException;
+import com.outsider.reward.domain.tag.command.domain.BaseTimeEntity;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
-import com.outsider.reward.domain.member.command.domain.Member;
-import com.outsider.reward.domain.store.exception.StoreMissionErrorCode;
-import com.outsider.reward.domain.store.exception.StoreMissionException;
-import com.outsider.reward.domain.tag.command.domain.BaseTimeEntity;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -17,7 +18,7 @@ import com.outsider.reward.domain.tag.command.domain.BaseTimeEntity;
     uniqueConstraints = {
         @UniqueConstraint(
             name = "uk_reward_usage_user_mission",
-            columnNames = {"user_id", "store_mission_id"}
+            columnNames = {"user_id", "mission_id"}
         )
     }
 )
@@ -29,8 +30,8 @@ public class RewardUsage extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_mission_id")
-    private StoreMission storeMission;
+    @JoinColumn(name = "mission_id")
+    private Mission mission;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -38,18 +39,17 @@ public class RewardUsage extends BaseTimeEntity {
 
     @Column(nullable = false)
     private double amount;
-    
+
     @Enumerated(EnumType.STRING)
     private RewardUsageStatus status;
 
-    @Column(name = "used_at")
     private LocalDateTime usedAt;
 
-    public RewardUsage(StoreMission storeMission, Member user, double amount) {
-        this.storeMission = storeMission;
+    public RewardUsage(Mission mission, Member user, double amount) {
+        this.mission = mission;
         this.user = user;
         this.amount = amount;
-        this.status = RewardUsageStatus.PENDING;  // 초기 상태는 PENDING
+        this.status = RewardUsageStatus.PENDING;
     }
 
     public void complete() {
@@ -61,9 +61,9 @@ public class RewardUsage extends BaseTimeEntity {
         this.status = RewardUsageStatus.FAILED;
     }
 
-    public static void   validateUserCanUseReward(Member user, StoreMission mission) {
+    public static void validateUserCanUseReward(Member user, Mission mission) {
         if (mission.hasUserUsedReward(user)) {
-            throw new StoreMissionException(StoreMissionErrorCode.ALREADY_USED_REWARD);
+            throw new MissionException(MissionErrorCode.ALREADY_USED_REWARD);
         }
     }
-} 
+}
