@@ -12,5 +12,6 @@ public enum TransactionType {
     ADMIN_CHARGE,   // 관리자 충전
     KAKAO_PAY,      // 카카오페이 충전
     BANK_TRANSFER,  // 계좌이체
-    NAVER_PAY       // 네이버페이 충전
+    NAVER_PAY ,      // 네이버페이 충전,
+    EARN,           // 미션 완료 보상
 } 

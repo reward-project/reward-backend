@@ -15,15 +15,4 @@ public class CashHistoryResponse {
     private final String description;
     private final LocalDateTime createdAt;
     private final double balance;
-
-    public static CashHistoryResponse from(CashHistory history) {
-        return CashHistoryResponse.builder()
-            .id(history.getId())
-            .amount(history.getAmount())
-            .type(history.getType())
-            .description(history.getDescription())
-            .createdAt(history.getCreatedAt())
-            .balance(history.getBalance())
-            .build();
-    }
 }

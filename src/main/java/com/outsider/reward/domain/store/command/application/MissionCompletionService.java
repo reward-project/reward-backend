@@ -1,7 +1,6 @@
 package com.outsider.reward.domain.store.command.application;
 
-import com.outsider.reward.domain.finance.command.domain.Account;
-import com.outsider.reward.domain.finance.command.domain.AccountRepository;
+import com.outsider.reward.domain.finance.command.domain.*;
 import com.outsider.reward.domain.member.command.domain.Member;
 import com.outsider.reward.domain.member.command.domain.MemberRepository;
 import com.outsider.reward.domain.store.command.domain.*;
@@ -24,6 +23,7 @@ public class MissionCompletionService {
     private final RewardUsageRepository rewardUsageRepository;
     private final AccountRepository accountRepository;
     private final MemberRepository memberRepository;
+    private final TransactionRepository transactionRepository;
 
     @Transactional
     public void completeMission(Long userId, Long missionId, String answer) {
@@ -70,6 +70,16 @@ public class MissionCompletionService {
         // 6.3 사용자 계정 업데이트
         account.addBalance(rewardAmount);
         accountRepository.save(account);
+
+        // 6.4 거래 내역 추가
+        Transaction transaction = Transaction.builder()
+            .account(account)
+            .amount(rewardAmount)
+            .type(TransactionType.EARN)
+            .description(mission.getRewardName() + " 미션 완료 보상")
+            .rewardUsage(rewardUsage)
+            .build();
+        transactionRepository.save(transaction);
     }
 
     @Transactional
