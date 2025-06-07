@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1.4
+# Spring DevTools를 위한 최적화된 개발용 Dockerfile
+
+# 1단계: 의존성 캐싱
+FROM eclipse-temurin:21-jdk AS deps
+
+WORKDIR /workspace
+
+# Gradle wrapper 복사 (변경 빈도 낮음)
+COPY gradle/wrapper gradle/wrapper
+COPY gradlew .
+RUN chmod +x gradlew
+
+# 의존성 파일만 먼저 복사 (캐싱 최적화)
+COPY build.gradle settings.gradle ./
+COPY *.gradle ./
+
+# gradle.properties가 있다면 복사
+COPY gradle.properties* ./
+
+# 의존성 다운로드 (캐시 레이어)
+RUN ./gradlew dependencies --no-daemon --parallel --build-cache
+
+# 2단계: 개발 환경
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /workspace
+
+# 캐시된 의존성 복사
+COPY --from=deps /root/.gradle /root/.gradle
+COPY --from=deps /workspace .
+
+# 소스 코드 복사 (가장 자주 변경됨)
+COPY src ./src
+
+# DevTools와 Gradle 최적화 환경 변수
+ENV SPRING_PROFILES_ACTIVE=dev
+ENV SPRING_DEVTOOLS_RESTART_ENABLED=true
+ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
+ENV SPRING_DEVTOOLS_RESTART_ADDITIONAL_PATHS=/workspace
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+# 포트 노출 (서비스별로 다름)
+EXPOSE 8882 35729
+
+# Gradle bootRun으로 실행 (DevTools 활성화)
+CMD ["./gradlew", "bootRun", "--no-daemon", "--parallel", "--build-cache"]
