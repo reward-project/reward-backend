@@ -40,3 +40,6 @@ out/
 logs/
 
 src/main/generated/
+
+### Gradle Properties ###
+gradle.properties
