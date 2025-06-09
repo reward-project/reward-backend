@@ -2,8 +2,6 @@
 spring:
   application:
     name: reward # config server에서 사용할 애플리케이션 이름
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
   config:
     import: 
       - optional:file:.env[.properties]
