@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -48,7 +49,12 @@ public abstract class Mission {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @OneToOne(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "totalBudget", column = @Column(name = "reward_total_budget")),
+        @AttributeOverride(name = "usedBudget", column = @Column(name = "reward_used_budget")),
+        @AttributeOverride(name = "remainingBudget", column = @Column(name = "reward_remaining_budget"))
+    })
     private RewardBudget budget;
 
     @Column(name = "max_rewards_per_day", nullable = false)
@@ -93,7 +99,7 @@ public abstract class Mission {
     public abstract boolean validateAnswer(String answer);
     
     public void initializeBudget(double totalBudget) {
-        this.budget = new RewardBudget(this, totalBudget, this.maxRewardsPerDay);
+        this.budget = RewardBudget.create(BigDecimal.valueOf(totalBudget));
     }
 
     public boolean canUseReward(double amount) {
@@ -107,7 +113,7 @@ public abstract class Mission {
     }
 
     public double getRemainingBudget() {
-        return budget != null ? budget.getRemainingBudget() : 0;
+        return budget != null ? budget.getRemainingBudget().doubleValue() : 0;
     }
 
     public boolean isExpired() {
